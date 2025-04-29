@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, TextSearch } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { processTfIdf } from '@/utils/tfIdfProcessing';
 import TopTermsTable from '@/components/tfidf/TopTermsTable';
@@ -53,6 +53,23 @@ const TFIDF: React.FC = () => {
   const goBack = () => {
     navigate(-1);
   };
+
+  const goToNGram = () => {
+    if (processedReviews?.length > 0 && app) {
+      navigate('/ngram', { 
+        state: { 
+          processedReviews: processedReviews,
+          app: app
+        }
+      });
+    } else {
+      toast({
+        title: "No data available",
+        description: "Please process your reviews first.",
+        variant: "destructive",
+      });
+    }
+  };
   
   if (!app || !processedReviews?.length) {
     return (
@@ -84,6 +101,10 @@ const TFIDF: React.FC = () => {
             <p className="text-muted-foreground">{processedReviews.length} reviews analyzed</p>
           </div>
         </div>
+        <Button onClick={goToNGram} disabled={isProcessing}>
+          <TextSearch className="mr-2 h-4 w-4" />
+          N-Gram Analysis
+        </Button>
       </div>
       
       {isProcessing ? (
