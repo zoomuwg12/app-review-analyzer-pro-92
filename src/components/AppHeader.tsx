@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { BarChart, Search, Settings, Home, HelpCircle, LineChart } from 'lucide-react';
+import { BarChart, Search, Settings, Home, HelpCircle, LineChart, ChartBar } from 'lucide-react';
 
 const AppHeader: React.FC = () => {
   return (
@@ -36,6 +36,12 @@ const AppHeader: React.FC = () => {
               <Link to="/preprocessing" className="flex items-center text-sm gap-1 hover:text-primary transition-colors">
                 <Settings size={18} />
                 <span>Preprocessing</span>
+              </Link>
+            </li>
+            <li>
+              <Link to="/tfidf" className="flex items-center text-sm gap-1 hover:text-primary transition-colors">
+                <ChartBar size={18} />
+                <span>TF-IDF</span>
               </Link>
             </li>
             <li>
