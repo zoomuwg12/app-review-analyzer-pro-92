@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { Loader2, FileText, BarChart2, LineChart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { AppReview } from '@/utils/scraper';
 import SentimentSummary from '@/components/SentimentSummary';
@@ -9,8 +9,6 @@ import RatingsDistribution from '@/components/RatingsDistribution';
 import AspectAnalysis from '@/components/AspectAnalysis';
 import ReviewsTable from '@/components/ReviewsTable';
 import { useToast } from '@/hooks/use-toast';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFileLines, faChartBar, faChartLine } from '@fortawesome/free-solid-svg-icons';
 import Swal from 'sweetalert2';
 
 interface ReviewsContentProps {
@@ -105,11 +103,11 @@ const ReviewsContent: React.FC<ReviewsContentProps> = ({
     <>
       <div className="flex flex-wrap justify-end gap-2 mb-6">
         <Button variant="outline" onClick={handleNavigateToPreprocessing}>
-          <FontAwesomeIcon icon={faFileLines} className="mr-2" />
+          <FileText className="mr-2 h-4 w-4" />
           Text Preprocessing
         </Button>
         <Button variant="outline" onClick={handleNavigateToAnalysis}>
-          <FontAwesomeIcon icon={faChartBar} className="mr-2" />
+          <BarChart2 className="mr-2 h-4 w-4" />
           Advanced Analysis
           <Button 
             variant="ghost" 
@@ -124,7 +122,7 @@ const ReviewsContent: React.FC<ReviewsContentProps> = ({
           </Button>
         </Button>
         <Button variant="default" onClick={handleNavigateToEDAAnalysis}>
-          <FontAwesomeIcon icon={faChartLine} className="mr-2" />
+          <LineChart className="mr-2 h-4 w-4" />
           EDA & Statistics
         </Button>
       </div>

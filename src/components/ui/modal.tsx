@@ -1,8 +1,7 @@
 
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTimesCircle } from '@fortawesome/free-solid-svg-icons';
+import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface ModalProps {
@@ -46,7 +45,7 @@ const Modal: React.FC<ModalProps> = ({
             onClick={onClose} 
             className="h-8 w-8 rounded-full p-0"
           >
-            <FontAwesomeIcon icon={faTimesCircle} />
+            <X />
             <span className="sr-only">Close</span>
           </Button>
         </DialogHeader>

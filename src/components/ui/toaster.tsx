@@ -8,8 +8,7 @@ import {
   ToastTitle,
   ToastViewport,
 } from "@/components/ui/toast"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faCheck, faXmark, faInfoCircle, faExclamationTriangle } from "@fortawesome/free-solid-svg-icons"
+import { CheckCircle, AlertTriangle, Info, X } from "lucide-react"
 
 export function Toaster() {
   const { toasts } = useToast()
@@ -20,13 +19,19 @@ export function Toaster() {
         let icon
         switch (variant) {
           case "destructive":
-            icon = <FontAwesomeIcon icon={faExclamationTriangle} className="h-5 w-5 text-destructive" />
+            icon = <AlertTriangle className="h-5 w-5 text-destructive" />
             break
           case "success":
-            icon = <FontAwesomeIcon icon={faCheck} className="h-5 w-5 text-green-500" />
+            icon = <CheckCircle className="h-5 w-5 text-green-500" />
+            break
+          case "warning":
+            icon = <AlertTriangle className="h-5 w-5 text-amber-500" />
+            break
+          case "info":
+            icon = <Info className="h-5 w-5 text-blue-500" />
             break
           default:
-            icon = <FontAwesomeIcon icon={faInfoCircle} className="h-5 w-5 text-primary" />
+            icon = <Info className="h-5 w-5 text-primary" />
         }
 
         return (
@@ -42,7 +47,7 @@ export function Toaster() {
             </div>
             {action}
             <ToastClose>
-              <FontAwesomeIcon icon={faXmark} className="h-4 w-4" />
+              <X className="h-4 w-4" />
             </ToastClose>
           </Toast>
         )

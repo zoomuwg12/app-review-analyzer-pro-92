@@ -69,6 +69,7 @@ const ReviewsTable: React.FC<ReviewsTableProps> = ({ reviews, appName }) => {
     });
   };
 
+  // Fixed columns type to properly handle Date
   const columns = [
     {
       name: 'User',
@@ -110,7 +111,8 @@ const ReviewsTable: React.FC<ReviewsTableProps> = ({ reviews, appName }) => {
     },
     {
       name: 'Date',
-      selector: (row: AppReview) => row.at,
+      // Fix: Convert date to string for selector to avoid type errors
+      selector: (row: AppReview) => row.at.toString(),
       sortable: true,
       cell: (row: AppReview) => formatDate(row.at),
       width: '150px',
