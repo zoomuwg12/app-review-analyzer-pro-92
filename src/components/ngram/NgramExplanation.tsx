@@ -6,9 +6,31 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter
 } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { BrainCircuit } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-const NgramExplanation: React.FC = () => {
+interface NgramExplanationProps {
+  app?: any;
+  processedReviews?: any[];
+}
+
+const NgramExplanation: React.FC<NgramExplanationProps> = ({ app, processedReviews }) => {
+  const navigate = useNavigate();
+
+  const handleNavigateToMLComparison = () => {
+    if (processedReviews?.length > 0 && app) {
+      navigate('/ml-comparison', { 
+        state: { 
+          reviews: processedReviews,
+          app: app
+        }
+      });
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -38,6 +60,14 @@ const NgramExplanation: React.FC = () => {
           Use this analysis to complement TF-IDF by examining how words appear together in context rather than just their individual importance.
         </p>
       </CardContent>
+      {app && processedReviews && processedReviews.length > 0 && (
+        <CardFooter className="border-t pt-4">
+          <Button variant="outline" className="w-full" onClick={handleNavigateToMLComparison}>
+            <BrainCircuit className="mr-2 h-4 w-4" />
+            Try Machine Learning Analysis
+          </Button>
+        </CardFooter>
+      )}
     </Card>
   );
 };

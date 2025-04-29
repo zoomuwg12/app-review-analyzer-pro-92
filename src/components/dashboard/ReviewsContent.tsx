@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, FileText, BarChart2, LineChart } from 'lucide-react';
+import { Loader2, FileText, BarChart2, LineChart, BrainCircuit } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { AppReview } from '@/utils/scraper';
 import SentimentSummary from '@/components/SentimentSummary';
@@ -75,6 +75,14 @@ const ReviewsContent: React.FC<ReviewsContentProps> = ({
     });
   };
 
+  const handleNavigateToMLComparison = () => {
+    navigate('/ml-comparison', { state: { reviews, app } });
+    toast({
+      title: "Navigating to ML Model Comparison",
+      description: `Comparing ML algorithms for sentiment analysis`,
+    });
+  };
+
   const showAnalysisInfo = () => {
     Swal.fire({
       title: 'Advanced Analysis',
@@ -121,9 +129,13 @@ const ReviewsContent: React.FC<ReviewsContentProps> = ({
             <span className="font-semibold">?</span>
           </Button>
         </Button>
-        <Button variant="default" onClick={handleNavigateToEDAAnalysis}>
+        <Button variant="outline" onClick={handleNavigateToEDAAnalysis}>
           <LineChart className="mr-2 h-4 w-4" />
           EDA & Statistics
+        </Button>
+        <Button variant="default" onClick={handleNavigateToMLComparison}>
+          <BrainCircuit className="mr-2 h-4 w-4" />
+          ML Comparison
         </Button>
       </div>
       

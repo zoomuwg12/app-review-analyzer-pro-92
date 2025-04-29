@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, TextSearch } from 'lucide-react';
+import { ArrowLeft, TextSearch, BrainCircuit } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { processTfIdf } from '@/utils/tfIdfProcessing';
 import TopTermsTable from '@/components/tfidf/TopTermsTable';
@@ -70,6 +70,23 @@ const TFIDF: React.FC = () => {
       });
     }
   };
+
+  const goToMLComparison = () => {
+    if (processedReviews?.length > 0 && app) {
+      navigate('/ml-comparison', { 
+        state: { 
+          reviews: processedReviews,
+          app: app
+        }
+      });
+    } else {
+      toast({
+        title: "No data available",
+        description: "Please process your reviews first.",
+        variant: "destructive",
+      });
+    }
+  };
   
   if (!app || !processedReviews?.length) {
     return (
@@ -101,10 +118,16 @@ const TFIDF: React.FC = () => {
             <p className="text-muted-foreground">{processedReviews.length} reviews analyzed</p>
           </div>
         </div>
-        <Button onClick={goToNGram} disabled={isProcessing}>
-          <TextSearch className="mr-2 h-4 w-4" />
-          N-Gram Analysis
-        </Button>
+        <div className="space-x-2">
+          <Button variant="outline" onClick={goToNGram} disabled={isProcessing}>
+            <TextSearch className="mr-2 h-4 w-4" />
+            N-Gram Analysis
+          </Button>
+          <Button onClick={goToMLComparison} disabled={isProcessing}>
+            <BrainCircuit className="mr-2 h-4 w-4" />
+            ML Comparison
+          </Button>
+        </div>
       </div>
       
       {isProcessing ? (
