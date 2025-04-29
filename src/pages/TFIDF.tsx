@@ -1,39 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, BarChart2, Download } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { AppReview } from '@/utils/scraper';
-import { processTfIdf, TermWeight } from '@/utils/tfIdfProcessing';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from '@/components/ui/table';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { exportToCsv } from '@/utils/exportData';
-
-// Chart component for visualization
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RechartsTooltip,
-  ResponsiveContainer
-} from 'recharts';
+import { processTfIdf } from '@/utils/tfIdfProcessing';
+import TopTermsTable from '@/components/tfidf/TopTermsTable';
+import TermsVisualization from '@/components/tfidf/TermsVisualization';
+import TfidfExplanation from '@/components/tfidf/TfidfExplanation';
+import TfidfLoading from '@/components/tfidf/TfidfLoading';
 
 const TFIDF: React.FC = () => {
   const { toast } = useToast();
@@ -42,7 +18,7 @@ const TFIDF: React.FC = () => {
   const { processedReviews, app } = location.state || { processedReviews: [], app: null };
   
   const [maxTerms, setMaxTerms] = useState<number>(20);
-  const [tfIdfData, setTfIdfData] = useState<{ topTermsOverall: TermWeight[] }>({ topTermsOverall: [] });
+  const [tfIdfData, setTfIdfData] = useState<{ topTermsOverall: { term: string; weight: number }[] }>({ topTermsOverall: [] });
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   
   useEffect(() => {
@@ -78,47 +54,6 @@ const TFIDF: React.FC = () => {
     navigate(-1);
   };
   
-  const downloadTfIdfResults = () => {
-    if (!tfIdfData.topTermsOverall?.length) return;
-    
-    // Format data for CSV - using the exportToCsv function
-    const csvData = tfIdfData.topTermsOverall.map((item, index) => ({
-      Rank: index + 1,
-      Term: item.term,
-      "TF-IDF Weight": item.weight.toFixed(4)
-    }));
-    
-    exportToCsv(csvData, `${app?.title || 'app'}_tfidf_results_${new Date().toISOString().split('T')[0]}`);
-    
-    toast({
-      title: "Export successful",
-      description: "TF-IDF results exported as CSV",
-    });
-  };
-  
-  // Chart data preparation
-  const getChartData = () => {
-    return tfIdfData.topTermsOverall
-      .slice(0, maxTerms)
-      .map(item => ({
-        term: item.term,
-        weight: parseFloat(item.weight.toFixed(4))
-      }));
-  };
-
-  // Custom tooltip formatter for the chart
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-background border border-border p-2 rounded-md shadow-md">
-          <p className="font-medium">{`Term: ${payload[0].payload.term}`}</p>
-          <p className="text-sm text-muted-foreground">{`Weight: ${payload[0].value.toFixed(4)}`}</p>
-        </div>
-      );
-    }
-    return null;
-  };
-  
   if (!app || !processedReviews?.length) {
     return (
       <div className="container mx-auto py-12 px-4">
@@ -152,135 +87,22 @@ const TFIDF: React.FC = () => {
       </div>
       
       {isProcessing ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <div className="flex flex-col items-center gap-4">
-              <BarChart2 className="h-16 w-16 animate-pulse text-primary" />
-              <h3 className="text-xl font-semibold">Processing TF-IDF</h3>
-              <p className="text-center text-muted-foreground">
-                Analyzing term importance across {processedReviews.length} reviews. This may take a moment...
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <TfidfLoading reviewCount={processedReviews.length} />
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Top Terms by TF-IDF</CardTitle>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Show:</span>
-                <Select 
-                  value={maxTerms.toString()} 
-                  onValueChange={(value) => setMaxTerms(parseInt(value))}
-                >
-                  <SelectTrigger className="w-20">
-                    <SelectValue placeholder="20" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="10">10</SelectItem>
-                    <SelectItem value="20">20</SelectItem>
-                    <SelectItem value="30">30</SelectItem>
-                    <SelectItem value="50">50</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="rounded-md border overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Rank</TableHead>
-                      <TableHead>Term</TableHead>
-                      <TableHead className="text-right">TF-IDF Weight</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {tfIdfData.topTermsOverall.slice(0, maxTerms).map((item, index) => (
-                      <TableRow key={item.term}>
-                        <TableCell className="font-medium">{index + 1}</TableCell>
-                        <TableCell>{item.term}</TableCell>
-                        <TableCell className="text-right">{item.weight.toFixed(4)}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-              
-              <Button onClick={downloadTfIdfResults} className="w-full mt-4">
-                <Download className="mr-2 h-4 w-4" />
-                Export Results
-              </Button>
-            </CardContent>
-          </Card>
+          <TopTermsTable 
+            terms={tfIdfData.topTermsOverall} 
+            maxTerms={maxTerms} 
+            onMaxTermsChange={setMaxTerms}
+            appTitle={app?.title}
+          />
           
-          <Card>
-            <CardHeader>
-              <CardTitle>Term Importance Visualization</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[400px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={getChartData()}
-                    layout="vertical"
-                    margin={{ top: 5, right: 30, left: 80, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
-                    <XAxis type="number" domain={[0, 'auto']} />
-                    <YAxis 
-                      type="category" 
-                      dataKey="term" 
-                      width={80} 
-                      tick={{ fontSize: 12 }}
-                    />
-                    <RechartsTooltip content={<CustomTooltip />} />
-                    <Bar dataKey="weight" fill="#8884d8" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
+          <TermsVisualization 
+            terms={tfIdfData.topTermsOverall} 
+            maxTerms={maxTerms}
+          />
           
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle>Understanding TF-IDF Analysis</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-sm font-medium">What is TF-IDF?</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    TF-IDF (Term Frequency-Inverse Document Frequency) is a statistical measure used to evaluate the importance 
-                    of a word in a document relative to a collection of documents. It helps identify significant terms that are 
-                    distinctive to specific documents.
-                  </p>
-                </div>
-                
-                <div>
-                  <h3 className="text-sm font-medium">How is it calculated?</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    TF-IDF weight is the product of two factors:
-                  </p>
-                  <ul className="text-sm text-muted-foreground mt-1 space-y-1 list-disc pl-4">
-                    <li>Term Frequency (TF): How often a term appears in a document</li>
-                    <li>Inverse Document Frequency (IDF): How unique or rare the term is across all documents</li>
-                  </ul>
-                </div>
-                
-                <div>
-                  <h3 className="text-sm font-medium">Why is TF-IDF useful for app reviews?</h3>
-                  <ul className="text-sm text-muted-foreground mt-1 space-y-1 list-disc pl-4">
-                    <li>Identifies important keywords specific to your app's reviews</li>
-                    <li>Helps discover unique feature requests or issues</li>
-                    <li>Filters out common words that appear in all reviews</li>
-                    <li>Provides insight into what makes your app distinctive</li>
-                  </ul>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <TfidfExplanation />
         </div>
       )}
     </div>
