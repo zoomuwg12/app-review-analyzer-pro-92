@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -198,7 +197,7 @@ const MLComparison: React.FC = () => {
             </Button>
             
             {selectedModels.length === 0 && (
-              <Alert variant="warning">
+              <Alert variant="destructive">
                 <AlertTitle>No models selected</AlertTitle>
                 <AlertDescription>
                   Please select at least one model to run the comparison.
