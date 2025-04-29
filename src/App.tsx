@@ -8,6 +8,7 @@ import AppHeader from "./components/AppHeader";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Analysis from "./pages/Analysis";
+import EDAAnalysis from "./pages/EDAAnalysis";
 import Preprocessing from "./pages/Preprocessing";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
@@ -27,6 +28,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/analysis" element={<Analysis />} />
+              <Route path="/eda-analysis" element={<EDAAnalysis />} />
               <Route path="/preprocessing" element={<Preprocessing />} />
               <Route path="/about" element={<About />} />
               <Route path="*" element={<NotFound />} />

@@ -155,6 +155,7 @@ const Dashboard: React.FC = () => {
             reviews={reviews}
             isLoadingReviews={isLoadingReviews}
             appName={selectedApp.title}
+            app={selectedApp}
             onLoadReviews={() => loadReviews(selectedAppId!)}
           />
         </div>
