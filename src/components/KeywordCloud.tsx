@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { getKeywordFrequencies } from '@/utils/textProcessing';
+import { getKeywordFrequencies } from '@/utils/textProcessing'; // This import will now use the index.ts file
 import { AppReview } from '@/utils/scraper';
 
 interface KeywordCloudProps {

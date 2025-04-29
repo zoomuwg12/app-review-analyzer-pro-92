@@ -5,7 +5,7 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { AppReview } from '@/utils/scraper';
-import { preprocessText } from '@/utils/textProcessing';
+import { preprocessText } from '@/utils/textProcessing'; // This import will now use the index.ts file
 
 interface ReviewsPreprocessingProps {
   reviews: AppReview[];
