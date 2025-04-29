@@ -2,7 +2,55 @@
 import * as XLSX from 'xlsx';
 import { AppReview } from './scraper';
 
-export function exportToCsv(data: AppReview[], filename: string): void {
+export function exportToCsv(data: any[], filename: string): void {
+  // Format the data for CSV
+  const csvRows: string[] = [];
+  
+  // Add headers based on the first object's keys
+  if (data.length > 0) {
+    const headers = Object.keys(data[0]);
+    csvRows.push(headers.join(','));
+    
+    // Add data rows
+    data.forEach(item => {
+      const row = headers.map(header => {
+        // Handle different data types appropriately
+        const value = item[header];
+        if (value === null || value === undefined) {
+          return '""';
+        } else if (typeof value === 'string') {
+          return `"${value.replace(/"/g, '""')}"`;
+        } else if (value instanceof Date) {
+          return `"${value.toISOString()}"`;
+        } else {
+          return value;
+        }
+      });
+      csvRows.push(row.join(','));
+    });
+  }
+  
+  // Create CSV content
+  const csvContent = csvRows.join('\n');
+  
+  // Create a blob with the CSV content
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  
+  // Create download link
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  link.setAttribute('href', url);
+  link.setAttribute('download', `${filename}.csv`);
+  link.style.visibility = 'hidden';
+  
+  // Add link to body, click it, and remove it
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+// Special function for AppReview objects
+export function exportReviewsToCsv(data: AppReview[], filename: string): void {
   // Format the data for CSV
   const csvRows: string[] = [];
   

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -70,7 +69,7 @@ const TFIDF: React.FC = () => {
   const downloadTfIdfResults = () => {
     if (!tfIdfData.topTermsOverall?.length) return;
     
-    // Format data for CSV
+    // Format data for CSV - using the generic exportToCsv function now
     const csvData = tfIdfData.topTermsOverall.map((item, index) => ({
       Rank: index + 1,
       Term: item.term,
