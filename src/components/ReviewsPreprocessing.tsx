@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -11,11 +10,13 @@ import { preprocessText } from '@/utils/textProcessing';
 interface ReviewsPreprocessingProps {
   reviews: AppReview[];
   onProcessedDataChange?: (data: string) => void;
+  onProcessedReviewsChange?: (data: AppReview[]) => void;
 }
 
 const ReviewsPreprocessing: React.FC<ReviewsPreprocessingProps> = ({ 
   reviews, 
-  onProcessedDataChange 
+  onProcessedDataChange,
+  onProcessedReviewsChange
 }) => {
   const [options, setOptions] = useState({
     lowercase: true,
@@ -23,6 +24,7 @@ const ReviewsPreprocessing: React.FC<ReviewsPreprocessingProps> = ({
     removeNumbers: false,
     removePunctuation: true,
     removeTags: true,
+    applyStemming: false,
   });
 
   const [selectedReviewIndex, setSelectedReviewIndex] = useState(0);
@@ -59,10 +61,29 @@ const ReviewsPreprocessing: React.FC<ReviewsPreprocessingProps> = ({
       .join('\n');
   };
 
+  // Process all reviews and return modified review objects
+  const processAllReviewObjects = (): AppReview[] => {
+    if (reviews.length === 0) return [];
+    
+    return reviews.map(review => ({
+      ...review,
+      content: preprocessText(review.content, options).processed,
+      processedContent: preprocessText(review.content, options).processed,
+      // Keep the original content in a separate field
+      originalContent: review.content
+    }));
+  };
+
   const handleProcessAll = () => {
     const processedText = processAllReviews();
+    const processedReviews = processAllReviewObjects();
+    
     if (onProcessedDataChange) {
       onProcessedDataChange(processedText);
+    }
+    
+    if (onProcessedReviewsChange) {
+      onProcessedReviewsChange(processedReviews);
     }
   };
 
@@ -112,6 +133,14 @@ const ReviewsPreprocessing: React.FC<ReviewsPreprocessingProps> = ({
                 id="removeTags"
                 checked={options.removeTags}
                 onCheckedChange={() => handleOptionChange('removeTags')}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="applyStemming" className="cursor-pointer">Apply stemming</Label>
+              <Switch
+                id="applyStemming"
+                checked={options.applyStemming}
+                onCheckedChange={() => handleOptionChange('applyStemming')}
               />
             </div>
           </div>
