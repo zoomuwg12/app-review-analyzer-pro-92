@@ -14,7 +14,7 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Loader2, ChevronDown } from 'lucide-react';
+import { Loader2, ChevronDown, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import AddAppForm from '@/components/AddAppForm';
 import AppCard from '@/components/AppCard';
@@ -23,6 +23,7 @@ import SentimentSummary from '@/components/SentimentSummary';
 import AspectAnalysis from '@/components/AspectAnalysis';
 import RatingsDistribution from '@/components/RatingsDistribution';
 import { fetchAppInfo, fetchAppReviews, AppInfo, AppReview } from '@/utils/scraper';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const Dashboard: React.FC = () => {
   const { toast } = useToast();
@@ -140,6 +141,14 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="container mx-auto py-8 px-4 space-y-8">
+      <Alert className="bg-amber-50 border-amber-200 mb-6">
+        <AlertTriangle className="h-4 w-4 text-amber-500" />
+        <AlertTitle>Demo Mode</AlertTitle>
+        <AlertDescription>
+          This app is running in demo mode with mock data. In production, this would connect to the Google Play Store API.
+        </AlertDescription>
+      </Alert>
+
       <Card>
         <CardHeader>
           <CardTitle>Add Google Play App</CardTitle>
