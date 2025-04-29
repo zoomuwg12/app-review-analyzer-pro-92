@@ -1,13 +1,14 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, LineChart, BarChart } from 'lucide-react';
+import { Loader2, LineChart, BarChart, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { AppReview } from '@/utils/scraper';
 import SentimentSummary from '@/components/SentimentSummary';
 import RatingsDistribution from '@/components/RatingsDistribution';
 import AspectAnalysis from '@/components/AspectAnalysis';
 import ReviewsTable from '@/components/ReviewsTable';
+import { useToast } from '@/hooks/use-toast';
 
 interface ReviewsContentProps {
   reviews: AppReview[];
@@ -25,6 +26,7 @@ const ReviewsContent: React.FC<ReviewsContentProps> = ({
   onLoadReviews 
 }) => {
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   if (isLoadingReviews) {
     return (
@@ -50,15 +52,35 @@ const ReviewsContent: React.FC<ReviewsContentProps> = ({
 
   const handleNavigateToAnalysis = () => {
     navigate('/analysis', { state: { reviews, app } });
+    toast({
+      title: "Navigating to Analysis",
+      description: `Analyzing ${reviews.length} reviews`,
+    });
   };
   
   const handleNavigateToEDAAnalysis = () => {
     navigate('/eda-analysis', { state: { reviews, app } });
+    toast({
+      title: "Navigating to EDA Analysis",
+      description: `${reviews.length} reviews ready for statistical analysis`,
+    });
+  };
+
+  const handleNavigateToPreprocessing = () => {
+    navigate('/preprocessing', { state: { reviews, app } });
+    toast({
+      title: "Navigating to Text Preprocessing",
+      description: `${reviews.length} reviews available for text processing`,
+    });
   };
 
   return (
     <>
-      <div className="flex justify-end space-x-4 mb-6">
+      <div className="flex flex-wrap justify-end gap-2 mb-6">
+        <Button variant="outline" onClick={handleNavigateToPreprocessing}>
+          <FileText className="mr-2 h-4 w-4" />
+          Text Preprocessing
+        </Button>
         <Button variant="outline" onClick={handleNavigateToAnalysis}>
           <BarChart className="mr-2 h-4 w-4" />
           Advanced Analysis

@@ -1,18 +1,29 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Download } from 'lucide-react';
+import { Download, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import ReviewsPreprocessing from '@/components/ReviewsPreprocessing';
 
 const Preprocessing: React.FC = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [processedData, setProcessedData] = useState<string>('');
   const location = useLocation();
-  const { reviews, app } = location.state || { reviews: [], app: null };
+  const { reviews: locationReviews, app } = location.state || { reviews: [], app: null };
+  
+  // Store reviews in state to prevent loss during navigation
+  const [reviews, setReviews] = useState(locationReviews || []);
+  
+  useEffect(() => {
+    // Update reviews when location state changes
+    if (location.state?.reviews?.length > 0) {
+      setReviews(location.state.reviews);
+    }
+  }, [location.state]);
 
   const handleProcessedDataChange = (data: string) => {
     setProcessedData(data);
@@ -33,6 +44,15 @@ const Preprocessing: React.FC = () => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Download started",
+      description: "Processed text file is being downloaded",
+    });
+  };
+  
+  const goBack = () => {
+    navigate(-1);
   };
 
   if (!app || reviews.length === 0) {
@@ -56,9 +76,14 @@ const Preprocessing: React.FC = () => {
   return (
     <div className="container mx-auto py-8 px-4 space-y-8">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">{app.title} - Text Preprocessing</h1>
-          <p className="text-muted-foreground">{reviews.length} reviews available for processing</p>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" onClick={goBack} className="mr-2">
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold">{app.title} - Text Preprocessing</h1>
+            <p className="text-muted-foreground">{reviews.length} reviews available for processing</p>
+          </div>
         </div>
       </div>
 

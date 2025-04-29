@@ -1,23 +1,38 @@
 
-import React, { useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { LineChart, Line, BarChart, Bar, PieChart, Pie, ScatterChart, Scatter, XAxis, YAxis, 
-  CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
 import { AppReview } from '@/utils/scraper';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ReviewCorrelation from '@/components/eda/ReviewCorrelation';
 import ReviewTrends from '@/components/eda/ReviewTrends';
 import ReviewLength from '@/components/eda/ReviewLength';
 import SentimentDistribution from '@/components/eda/SentimentDistribution';
+import { useToast } from '@/hooks/use-toast';
 
 const EDAAnalysis: React.FC = () => {
   const location = useLocation();
-  const { reviews, app } = location.state || { reviews: [], app: null };
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [timeFrame, setTimeFrame] = useState('all');
+  const { reviews: locationReviews, app } = location.state || { reviews: [], app: null };
+  
+  // Store reviews in state to prevent loss during navigation
+  const [reviews, setReviews] = useState<AppReview[]>(locationReviews || []);
+  
+  useEffect(() => {
+    // Update reviews when location state changes
+    if (location.state?.reviews?.length > 0) {
+      setReviews(location.state.reviews);
+      toast({
+        title: "Data loaded successfully",
+        description: `${location.state.reviews.length} reviews available for analysis`,
+      });
+    }
+  }, [location.state, toast]);
 
   if (!app || reviews.length === 0) {
     return (
