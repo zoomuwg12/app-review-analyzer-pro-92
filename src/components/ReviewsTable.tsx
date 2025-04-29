@@ -11,8 +11,7 @@ import { Button } from '@/components/ui/button';
 import { AppReview } from '@/utils/scraper';
 import { getSentiment } from '@/utils/textProcessing';
 import { exportToCsv, exportToExcel } from '@/utils/exportData';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faDownload, faChevronDown, faStar } from '@fortawesome/free-solid-svg-icons';
+import { Download, ChevronDown, Star } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 interface ReviewsTableProps {
@@ -92,7 +91,7 @@ const ReviewsTable: React.FC<ReviewsTableProps> = ({ reviews, appName }) => {
       sortable: true,
       cell: (row: AppReview) => (
         <div className="flex items-center">
-          <FontAwesomeIcon icon={faStar} className="text-yellow-400 mr-1" />
+          <Star className="h-4 w-4 text-yellow-400 mr-1" />
           {row.score}
         </div>
       ),
@@ -112,7 +111,7 @@ const ReviewsTable: React.FC<ReviewsTableProps> = ({ reviews, appName }) => {
     {
       name: 'Date',
       // Fix: Convert date to string for selector to avoid type errors
-      selector: (row: AppReview) => row.at.toString(),
+      selector: (row: AppReview) => row.at.toISOString(),
       sortable: true,
       cell: (row: AppReview) => formatDate(row.at),
       width: '150px',
@@ -150,9 +149,9 @@ const ReviewsTable: React.FC<ReviewsTableProps> = ({ reviews, appName }) => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm">
-              <FontAwesomeIcon icon={faDownload} className="mr-2" />
+              <Download className="mr-2 h-4 w-4" />
               Export
-              <FontAwesomeIcon icon={faChevronDown} className="ml-2" />
+              <ChevronDown className="ml-2 h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>

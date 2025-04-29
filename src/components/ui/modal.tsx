@@ -45,7 +45,7 @@ const Modal: React.FC<ModalProps> = ({
             onClick={onClose} 
             className="h-8 w-8 rounded-full p-0"
           >
-            <X />
+            <X className="h-4 w-4" />
             <span className="sr-only">Close</span>
           </Button>
         </DialogHeader>
