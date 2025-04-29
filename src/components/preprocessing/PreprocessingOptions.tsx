@@ -13,7 +13,7 @@ interface PreprocessingOptionsProps {
     removeTags: boolean;
     applyStemming: boolean;
   };
-  onOptionChange: (option: keyof typeof options) => void;
+  onOptionChange: (option: keyof PreprocessingOptionsProps['options']) => void;
 }
 
 const PreprocessingOptions: React.FC<PreprocessingOptionsProps> = ({ 
