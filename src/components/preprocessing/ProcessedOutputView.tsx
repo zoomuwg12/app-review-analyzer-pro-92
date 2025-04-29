@@ -35,7 +35,7 @@ const ProcessedOutputView: React.FC<ProcessedOutputViewProps> = ({
       id: review.id,
       content: review.processedContent || review.content,
       score: review.score,
-      date: review.date
+      date: review.at // Use review.at instead of review.date
     }));
     
     exportToCsv(exportData, `${app?.title}_processed_reviews_${new Date().toISOString().split('T')[0]}`);
