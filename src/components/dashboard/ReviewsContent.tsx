@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, LineChart, BarChart, FileText } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { AppReview } from '@/utils/scraper';
 import SentimentSummary from '@/components/SentimentSummary';
@@ -9,6 +9,9 @@ import RatingsDistribution from '@/components/RatingsDistribution';
 import AspectAnalysis from '@/components/AspectAnalysis';
 import ReviewsTable from '@/components/ReviewsTable';
 import { useToast } from '@/hooks/use-toast';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faFileLines, faChartBar, faChartLine } from '@fortawesome/free-solid-svg-icons';
+import Swal from 'sweetalert2';
 
 interface ReviewsContentProps {
   reviews: AppReview[];
@@ -74,19 +77,54 @@ const ReviewsContent: React.FC<ReviewsContentProps> = ({
     });
   };
 
+  const showAnalysisInfo = () => {
+    Swal.fire({
+      title: 'Advanced Analysis',
+      html: `
+        <div class="text-left">
+          <p>The Advanced Analysis section provides deeper insights into your app reviews:</p>
+          <ul class="list-disc pl-5 mt-2">
+            <li class="mb-1">Sentiment breakdown with detailed metrics</li>
+            <li class="mb-1">Topic modeling to discover common themes</li>
+            <li class="mb-1">Keyword extraction for important terms</li>
+            <li class="mb-1">Custom visualization options</li>
+          </ul>
+        </div>
+      `,
+      confirmButtonText: 'Got it!',
+      showClass: {
+        popup: 'animate-in',
+      },
+      hideClass: {
+        popup: 'animate-out',
+      }
+    });
+  };
+
   return (
     <>
       <div className="flex flex-wrap justify-end gap-2 mb-6">
         <Button variant="outline" onClick={handleNavigateToPreprocessing}>
-          <FileText className="mr-2 h-4 w-4" />
+          <FontAwesomeIcon icon={faFileLines} className="mr-2" />
           Text Preprocessing
         </Button>
         <Button variant="outline" onClick={handleNavigateToAnalysis}>
-          <BarChart className="mr-2 h-4 w-4" />
+          <FontAwesomeIcon icon={faChartBar} className="mr-2" />
           Advanced Analysis
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="ml-1 h-5 w-5 rounded-full p-0" 
+            onClick={(e) => {
+              e.stopPropagation();
+              showAnalysisInfo();
+            }}
+          >
+            <span className="font-semibold">?</span>
+          </Button>
         </Button>
         <Button variant="default" onClick={handleNavigateToEDAAnalysis}>
-          <LineChart className="mr-2 h-4 w-4" />
+          <FontAwesomeIcon icon={faChartLine} className="mr-2" />
           EDA & Statistics
         </Button>
       </div>

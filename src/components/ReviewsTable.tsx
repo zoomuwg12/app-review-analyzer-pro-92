@@ -1,13 +1,6 @@
 
 import React, { useState } from 'react';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
+import DataTable from 'react-data-table-component';
 import { 
   DropdownMenu, 
   DropdownMenuTrigger, 
@@ -15,10 +8,12 @@ import {
   DropdownMenuItem 
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, Download } from 'lucide-react';
 import { AppReview } from '@/utils/scraper';
 import { getSentiment } from '@/utils/textProcessing';
 import { exportToCsv, exportToExcel } from '@/utils/exportData';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faDownload, faChevronDown, faStar } from '@fortawesome/free-solid-svg-icons';
+import Swal from 'sweetalert2';
 
 interface ReviewsTableProps {
   reviews: AppReview[];
@@ -26,10 +21,7 @@ interface ReviewsTableProps {
 }
 
 const ReviewsTable: React.FC<ReviewsTableProps> = ({ reviews, appName }) => {
-  const [sortConfig, setSortConfig] = useState<{
-    key: keyof AppReview | 'sentiment';
-    direction: 'asc' | 'desc';
-  }>({ key: 'at', direction: 'desc' });
+  const [resetPaginationToggle, setResetPaginationToggle] = useState(false);
 
   const getSentimentColor = (score: number) => {
     const sentiment = getSentiment(score);
@@ -41,29 +33,13 @@ const ReviewsTable: React.FC<ReviewsTableProps> = ({ reviews, appName }) => {
     }
   };
 
-  const handleSort = (key: keyof AppReview | 'sentiment') => {
-    setSortConfig({
-      key,
-      direction: sortConfig.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc'
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
     });
   };
-
-  const sortedReviews = [...reviews].sort((a, b) => {
-    if (sortConfig.key === 'sentiment') {
-      const aSentiment = getSentiment(a.score);
-      const bSentiment = getSentiment(b.score);
-      return sortConfig.direction === 'asc' 
-        ? aSentiment.localeCompare(bSentiment)
-        : bSentiment.localeCompare(aSentiment);
-    }
-    
-    const aValue = a[sortConfig.key];
-    const bValue = b[sortConfig.key];
-
-    if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
-    if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
-    return 0;
-  });
 
   const handleExport = (format: 'csv' | 'excel') => {
     const filename = `${appName.replace(/\s+/g, '_')}_reviews_${new Date().toISOString().split('T')[0]}`;
@@ -75,12 +51,94 @@ const ReviewsTable: React.FC<ReviewsTableProps> = ({ reviews, appName }) => {
     }
   };
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+  const showReviewDetails = (review: AppReview) => {
+    Swal.fire({
+      title: `Review by ${review.userName}`,
+      html: `
+        <div class="text-left">
+          <p class="mb-2"><strong>Rating:</strong> ${review.score}/5</p>
+          <p class="mb-2"><strong>Date:</strong> ${formatDate(review.at)}</p>
+          <p class="mb-4"><strong>Review:</strong></p>
+          <p class="px-4 py-3 bg-gray-100 rounded">${review.content}</p>
+        </div>
+      `,
+      confirmButtonText: 'Close',
+      customClass: {
+        container: 'font-sans'
+      }
     });
+  };
+
+  const columns = [
+    {
+      name: 'User',
+      selector: (row: AppReview) => row.userName,
+      sortable: true,
+    },
+    {
+      name: 'Review',
+      selector: (row: AppReview) => row.content,
+      sortable: true,
+      cell: (row: AppReview) => (
+        <div className="max-w-md cursor-pointer" onClick={() => showReviewDetails(row)}>
+          <div className="line-clamp-2">{row.content}</div>
+        </div>
+      ),
+    },
+    {
+      name: 'Rating',
+      selector: (row: AppReview) => row.score,
+      sortable: true,
+      cell: (row: AppReview) => (
+        <div className="flex items-center">
+          <FontAwesomeIcon icon={faStar} className="text-yellow-400 mr-1" />
+          {row.score}
+        </div>
+      ),
+      width: '100px',
+    },
+    {
+      name: 'Sentiment',
+      selector: (row: AppReview) => getSentiment(row.score),
+      sortable: true,
+      cell: (row: AppReview) => (
+        <span className={`font-medium ${getSentimentColor(row.score)}`}>
+          {getSentiment(row.score).toUpperCase()}
+        </span>
+      ),
+      width: '120px',
+    },
+    {
+      name: 'Date',
+      selector: (row: AppReview) => row.at,
+      sortable: true,
+      cell: (row: AppReview) => formatDate(row.at),
+      width: '150px',
+    },
+  ];
+
+  const customStyles = {
+    headRow: {
+      style: {
+        backgroundColor: 'hsl(var(--secondary))',
+        color: 'hsl(var(--secondary-foreground))',
+      },
+    },
+    rows: {
+      style: {
+        backgroundColor: 'hsl(var(--card))',
+        color: 'hsl(var(--card-foreground))',
+        '&:hover': {
+          backgroundColor: 'hsl(var(--muted))',
+        },
+      },
+    },
+    pagination: {
+      style: {
+        backgroundColor: 'hsl(var(--card))',
+        color: 'hsl(var(--card-foreground))',
+      },
+    },
   };
 
   return (
@@ -90,9 +148,9 @@ const ReviewsTable: React.FC<ReviewsTableProps> = ({ reviews, appName }) => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm">
-              <Download className="mr-2 h-4 w-4" />
+              <FontAwesomeIcon icon={faDownload} className="mr-2" />
               Export
-              <ChevronDown className="ml-2 h-4 w-4" />
+              <FontAwesomeIcon icon={faChevronDown} className="ml-2" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
@@ -107,72 +165,19 @@ const ReviewsTable: React.FC<ReviewsTableProps> = ({ reviews, appName }) => {
       </div>
 
       <div className="rounded-md border border-border overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead 
-                className="cursor-pointer hover:bg-secondary/20"
-                onClick={() => handleSort('userName')}
-              >
-                User
-              </TableHead>
-              <TableHead 
-                className="cursor-pointer hover:bg-secondary/20"
-                onClick={() => handleSort('content')}
-              >
-                Review
-              </TableHead>
-              <TableHead 
-                className="cursor-pointer hover:bg-secondary/20 w-20"
-                onClick={() => handleSort('score')}
-              >
-                Rating
-              </TableHead>
-              <TableHead 
-                className="cursor-pointer hover:bg-secondary/20 w-28"
-                onClick={() => handleSort('sentiment')}
-              >
-                Sentiment
-              </TableHead>
-              <TableHead 
-                className="cursor-pointer hover:bg-secondary/20 w-28"
-                onClick={() => handleSort('at')}
-              >
-                Date
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sortedReviews.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center">
-                  No reviews available
-                </TableCell>
-              </TableRow>
-            ) : (
-              sortedReviews.map((review) => (
-                <TableRow key={review.id}>
-                  <TableCell className="font-medium">{review.userName}</TableCell>
-                  <TableCell className="max-w-md">
-                    <div className="line-clamp-3">{review.content}</div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center">
-                      <span className="text-yellow-400 mr-1">★</span>
-                      {review.score}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <span className={`font-medium ${getSentimentColor(review.score)}`}>
-                      {getSentiment(review.score).toUpperCase()}
-                    </span>
-                  </TableCell>
-                  <TableCell>{formatDate(review.at)}</TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+        <DataTable
+          columns={columns}
+          data={reviews}
+          pagination
+          paginationResetDefaultPage={resetPaginationToggle}
+          customStyles={customStyles}
+          highlightOnHover
+          pointerOnHover
+          persistTableHead
+          noDataComponent={
+            <div className="p-4 text-center">No reviews available</div>
+          }
+        />
       </div>
     </div>
   );
