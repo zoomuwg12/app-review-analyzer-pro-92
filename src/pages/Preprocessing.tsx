@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Download, ArrowLeft, FileText, FileSpreadsheet } from 'lucide-react';
+import { Download, ArrowLeft, FileText, FileSpreadsheet, BarChart2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import ReviewsPreprocessing from '@/components/ReviewsPreprocessing';
@@ -81,6 +81,27 @@ const Preprocessing: React.FC = () => {
       toast({
         title: "Export successful",
         description: "Processed reviews exported as Excel",
+      });
+    }
+  };
+
+  const navigateToTFIDF = () => {
+    if (processedReviews.length > 0) {
+      navigate('/tfidf', { 
+        state: { 
+          processedReviews, 
+          app 
+        } 
+      });
+      toast({
+        title: "Navigating to TF-IDF Analysis",
+        description: `${processedReviews.length} reviews ready for TF-IDF analysis`,
+      });
+    } else {
+      toast({
+        title: "No processed data",
+        description: "Please process reviews first before performing TF-IDF analysis",
+        variant: "destructive",
       });
     }
   };
@@ -192,7 +213,7 @@ const Preprocessing: React.FC = () => {
                         Showing 50 of {processedReviews.length} processed reviews.
                       </p>
                     )}
-                    <div className="flex space-x-2">
+                    <div className="flex space-x-2 mb-4">
                       <Button onClick={() => exportProcessedReviews('csv')} className="flex-1">
                         <FileText className="mr-2 h-4 w-4" />
                         Export as CSV
@@ -202,6 +223,10 @@ const Preprocessing: React.FC = () => {
                         Export as Excel
                       </Button>
                     </div>
+                    <Button onClick={navigateToTFIDF} className="w-full">
+                      <BarChart2 className="mr-2 h-4 w-4" />
+                      Run TF-IDF Analysis
+                    </Button>
                   </>
                 )
               ) : (
