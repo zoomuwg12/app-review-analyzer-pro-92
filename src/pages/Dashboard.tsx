@@ -1,29 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { Loader2, ChevronDown, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import AddAppForm from '@/components/AddAppForm';
-import AppCard from '@/components/AppCard';
-import ReviewsTable from '@/components/ReviewsTable';
-import SentimentSummary from '@/components/SentimentSummary';
-import AspectAnalysis from '@/components/AspectAnalysis';
-import RatingsDistribution from '@/components/RatingsDistribution';
-import { fetchAppInfo, fetchAppReviews, AppInfo, AppReview } from '@/utils/scraper';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertTriangle } from 'lucide-react';
+import { fetchAppInfo, fetchAppReviews, AppInfo, AppReview } from '@/utils/scraper';
+import AppSelector from '@/components/dashboard/AppSelector';
+import AppHeader from '@/components/dashboard/AppHeader';
+import ReviewsContent from '@/components/dashboard/ReviewsContent';
 
 const Dashboard: React.FC = () => {
   const { toast } = useToast();
@@ -149,114 +132,31 @@ const Dashboard: React.FC = () => {
         </AlertDescription>
       </Alert>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Add Google Play App</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <AddAppForm onAddApp={handleAddApp} isLoading={isLoadingApps} />
-        </CardContent>
-      </Card>
-
-      {apps.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Your Apps</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 gap-3">
-              {apps.map(app => (
-                <AppCard
-                  key={app.appId}
-                  app={app}
-                  onRemove={handleRemoveApp}
-                  onSelect={setSelectedAppId}
-                  isSelected={app.appId === selectedAppId}
-                />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <AppSelector 
+        apps={apps}
+        selectedAppId={selectedAppId}
+        onAddApp={handleAddApp}
+        onRemoveApp={handleRemoveApp}
+        onSelectApp={setSelectedAppId}
+        isLoadingApps={isLoadingApps}
+      />
 
       {selectedApp && (
         <div className="space-y-8">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-card rounded-lg p-5 shadow-md">
-            <div className="flex items-center space-x-4">
-              <img src={selectedApp.icon} alt={selectedApp.title} className="w-16 h-16 rounded-xl" />
-              <div>
-                <h2 className="text-2xl font-bold">{selectedApp.title}</h2>
-                <p className="text-muted-foreground">{selectedApp.developer}</p>
-                <div className="flex items-center mt-1">
-                  <div className="text-yellow-400 mr-1">★</div>
-                  <span>{selectedApp.score.toFixed(1)}</span>
-                  <span className="mx-2">•</span>
-                  <span>{selectedApp.free ? 'Free' : selectedApp.priceText}</span>
-                </div>
-              </div>
-            </div>
+          <AppHeader 
+            app={selectedApp}
+            reviewCount={reviewCount}
+            setReviewCount={setReviewCount}
+            onRefreshReviews={() => loadReviews(selectedAppId!)}
+            isLoadingReviews={isLoadingReviews}
+          />
 
-            <div className="flex items-center space-x-4">
-              <div className="flex flex-col">
-                <span className="text-xs text-muted-foreground mb-1">Reviews to fetch:</span>
-                <Select
-                  value={reviewCount.toString()}
-                  onValueChange={(value) => setReviewCount(parseInt(value))}
-                >
-                  <SelectTrigger className="w-[120px]">
-                    <SelectValue placeholder="Select" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="50">50 reviews</SelectItem>
-                    <SelectItem value="100">100 reviews</SelectItem>
-                    <SelectItem value="200">200 reviews</SelectItem>
-                    <SelectItem value="300">300 reviews</SelectItem>
-                    <SelectItem value="500">500 reviews</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button 
-                onClick={() => loadReviews(selectedAppId!)}
-                disabled={isLoadingReviews}
-              >
-                {isLoadingReviews ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Loading...
-                  </>
-                ) : (
-                  'Refresh Reviews'
-                )}
-              </Button>
-            </div>
-          </div>
-
-          {isLoadingReviews ? (
-            <div className="flex justify-center items-center h-64">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : reviews.length > 0 ? (
-            <>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <SentimentSummary reviews={reviews} />
-                <RatingsDistribution reviews={reviews} />
-              </div>
-              
-              <AspectAnalysis reviews={reviews} />
-              
-              <ReviewsTable reviews={reviews} appName={selectedApp.title} />
-            </>
-          ) : (
-            <div className="text-center py-12 bg-card rounded-lg shadow-md">
-              <h3 className="text-xl font-medium mb-2">No reviews loaded</h3>
-              <p className="text-muted-foreground mb-4">
-                Click the "Refresh Reviews" button to load reviews for analysis
-              </p>
-              <Button onClick={() => loadReviews(selectedAppId!)}>
-                Load Reviews
-              </Button>
-            </div>
-          )}
+          <ReviewsContent 
+            reviews={reviews}
+            isLoadingReviews={isLoadingReviews}
+            appName={selectedApp.title}
+            onLoadReviews={() => loadReviews(selectedAppId!)}
+          />
         </div>
       )}
     </div>
