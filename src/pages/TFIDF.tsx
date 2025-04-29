@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,7 +31,7 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
+  Tooltip as RechartsTooltip,
   ResponsiveContainer
 } from 'recharts';
 
@@ -50,14 +51,25 @@ const TFIDF: React.FC = () => {
       
       // Process TF-IDF in a setTimeout to avoid blocking the UI
       setTimeout(() => {
-        const result = processTfIdf(processedReviews);
-        setTfIdfData(result);
-        setIsProcessing(false);
-        
-        toast({
-          title: "TF-IDF Processing Complete",
-          description: `Processed ${processedReviews.length} reviews successfully.`,
-        });
+        try {
+          const result = processTfIdf(processedReviews);
+          setTfIdfData(result);
+          console.log("TF-IDF processing complete:", result);
+          
+          toast({
+            title: "TF-IDF Processing Complete",
+            description: `Processed ${processedReviews.length} reviews successfully.`,
+          });
+        } catch (error) {
+          console.error("Error processing TF-IDF:", error);
+          toast({
+            title: "TF-IDF Processing Error",
+            description: "An error occurred while processing TF-IDF data.",
+            variant: "destructive",
+          });
+        } finally {
+          setIsProcessing(false);
+        }
       }, 100);
     }
   }, [processedReviews, toast]);
@@ -69,7 +81,7 @@ const TFIDF: React.FC = () => {
   const downloadTfIdfResults = () => {
     if (!tfIdfData.topTermsOverall?.length) return;
     
-    // Format data for CSV - using the generic exportToCsv function now
+    // Format data for CSV - using the exportToCsv function
     const csvData = tfIdfData.topTermsOverall.map((item, index) => ({
       Rank: index + 1,
       Term: item.term,
@@ -93,6 +105,19 @@ const TFIDF: React.FC = () => {
         weight: parseFloat(item.weight.toFixed(4))
       }));
   };
+
+  // Custom tooltip formatter for the chart
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-background border border-border p-2 rounded-md shadow-md">
+          <p className="font-medium">{`Term: ${payload[0].payload.term}`}</p>
+          <p className="text-sm text-muted-foreground">{`Weight: ${payload[0].value.toFixed(4)}`}</p>
+        </div>
+      );
+    }
+    return null;
+  };
   
   if (!app || !processedReviews?.length) {
     return (
@@ -103,8 +128,8 @@ const TFIDF: React.FC = () => {
             <p className="text-muted-foreground text-center mb-6">
               Please process reviews in the preprocessing page first.
             </p>
-            <Button asChild onClick={() => navigate('/preprocessing')}>
-              <span>Go to Preprocessing</span>
+            <Button onClick={() => navigate('/preprocessing')}>
+              Go to Preprocessing
             </Button>
           </CardContent>
         </Card>
@@ -210,10 +235,7 @@ const TFIDF: React.FC = () => {
                       width={80} 
                       tick={{ fontSize: 12 }}
                     />
-                    <Tooltip 
-                      formatter={(value: number) => [value.toFixed(4), 'TF-IDF Weight']}
-                      labelFormatter={(label) => `Term: ${label}`}
-                    />
+                    <RechartsTooltip content={<CustomTooltip />} />
                     <Bar dataKey="weight" fill="#8884d8" />
                   </BarChart>
                 </ResponsiveContainer>

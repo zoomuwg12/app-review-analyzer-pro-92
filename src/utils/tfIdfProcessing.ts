@@ -18,7 +18,7 @@ export interface DocumentTfIdf {
  */
 export function calculateTermFrequency(terms: string[]): Map<string, number> {
   const termFrequency = new Map<string, number>();
-  const totalTerms = terms.length;
+  const totalTerms = terms.length || 1; // Prevent division by zero
   
   // Count occurrences of each term
   terms.forEach(term => {
@@ -42,7 +42,7 @@ export function calculateInverseDocumentFrequency(
   uniqueTerms: Set<string>
 ): Map<string, number> {
   const idf = new Map<string, number>();
-  const totalDocuments = documents.length;
+  const totalDocuments = documents.length || 1; // Prevent division by zero
   
   uniqueTerms.forEach(term => {
     // Count documents containing the term
@@ -59,11 +59,15 @@ export function calculateInverseDocumentFrequency(
  * Calculate TF-IDF for all documents
  */
 export function calculateTfIdf(documents: string[][]): DocumentTfIdf[] {
+  if (!documents.length) return [];
+
   // Get all unique terms across all documents
   const uniqueTerms = new Set<string>();
   documents.forEach(doc => {
     doc.forEach(term => {
-      uniqueTerms.add(term);
+      if (term && term.trim()) {
+        uniqueTerms.add(term.trim());
+      }
     });
   });
   
@@ -106,11 +110,15 @@ export function processTfIdf(reviews: AppReview[]): {
   allDocumentsTfIdf: DocumentTfIdf[];
   topTermsOverall: TermWeight[];
 } {
+  if (!reviews || !reviews.length) {
+    return { allDocumentsTfIdf: [], topTermsOverall: [] };
+  }
+
   // Prepare documents (each document is a review)
   const documents = reviews.map(review => {
     // Use processed content if available, otherwise use original content
-    const content = review.processedContent || review.content;
-    return content.split(/\s+/).filter(term => term.length > 0);
+    const content = review.processedContent || review.content || "";
+    return content.split(/\s+/).filter(term => term && term.length > 0);
   });
   
   // Calculate TF-IDF for all documents
@@ -134,4 +142,3 @@ export function processTfIdf(reviews: AppReview[]): {
   
   return { allDocumentsTfIdf, topTermsOverall };
 }
-
