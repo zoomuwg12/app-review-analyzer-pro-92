@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from 'lucide-react';
@@ -16,6 +17,7 @@ import ConfigurationCard from '@/components/ml/ConfigurationCard';
 import ResultsCard from '@/components/ml/ResultsCard';
 import AlgorithmExplanationCard from '@/components/ml/AlgorithmExplanationCard';
 import NoDataCard from '@/components/ml/NoDataCard';
+import { supabase } from "@/integrations/supabase/client";
 
 const MLComparison: React.FC = () => {
   const { toast } = useToast();
@@ -31,8 +33,117 @@ const MLComparison: React.FC = () => {
   // Results state
   const [isTraining, setIsTraining] = useState<boolean>(false);
   const [evaluations, setEvaluations] = useState<ModelEvaluation[]>([]);
+  const [isSavingToDatabase, setIsSavingToDatabase] = useState<boolean>(false);
+  const [isPreviousResultsLoading, setIsPreviousResultsLoading] = useState<boolean>(false);
   
-  // Handle model toggle
+  // Load previous results when component mounts
+  useEffect(() => {
+    if (app?.appId) {
+      loadPreviousResults(app.appId);
+    }
+  }, [app?.appId]);
+  
+  const loadPreviousResults = async (appId: string) => {
+    try {
+      setIsPreviousResultsLoading(true);
+      
+      // Fetch results from Supabase
+      const { data, error } = await supabase
+        .from('ml_comparisons')
+        .select('*')
+        .eq('app_id', appId)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      if (data && data.length > 0) {
+        // Convert Supabase data to ModelEvaluation format
+        const loadedEvaluations: ModelEvaluation[] = data.map(item => ({
+          modelName: item.model_name,
+          splitRatio: item.split_ratio,
+          predictionTime: item.prediction_time,
+          confusionMatrix: {
+            truePositive: item.true_positives,
+            falsePositive: item.false_positives,
+            trueNegative: item.true_negatives,
+            falseNegative: item.false_negatives,
+            accuracy: item.accuracy,
+            precision: item.precision,
+            recall: item.recall,
+            f1Score: item.f1_score
+          }
+        }));
+        
+        setEvaluations(loadedEvaluations);
+        toast({
+          title: "Previous results loaded",
+          description: `Loaded ${loadedEvaluations.length} evaluation results from the database.`,
+        });
+      }
+    } catch (error) {
+      console.error('Error loading previous results:', error);
+      toast({
+        title: "Failed to load previous results",
+        description: "Could not fetch evaluation results from the database.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsPreviousResultsLoading(false);
+    }
+  };
+  
+  const saveResultsToDatabase = async (evaluationsToSave: ModelEvaluation[]) => {
+    if (!app?.appId) {
+      toast({
+        title: "Cannot save results",
+        description: "App information is missing.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      setIsSavingToDatabase(true);
+      
+      // Prepare data for insertion
+      const dataToInsert = evaluationsToSave.map(evaluation => ({
+        app_id: app.appId,
+        model_name: evaluation.modelName,
+        split_ratio: evaluation.splitRatio,
+        accuracy: evaluation.confusionMatrix.accuracy,
+        precision: evaluation.confusionMatrix.precision,
+        recall: evaluation.confusionMatrix.recall,
+        f1_score: evaluation.confusionMatrix.f1Score,
+        true_positives: evaluation.confusionMatrix.truePositive,
+        false_positives: evaluation.confusionMatrix.falsePositive,
+        true_negatives: evaluation.confusionMatrix.trueNegative,
+        false_negatives: evaluation.confusionMatrix.falseNegative,
+        prediction_time: evaluation.predictionTime
+      }));
+      
+      // Insert into Supabase
+      const { error } = await supabase
+        .from('ml_comparisons')
+        .insert(dataToInsert);
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Results saved successfully",
+        description: `Saved ${evaluationsToSave.length} evaluation results to the database.`,
+      });
+    } catch (error) {
+      console.error('Error saving results to database:', error);
+      toast({
+        title: "Failed to save results",
+        description: "Could not save evaluation results to the database.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingToDatabase(false);
+    }
+  };
+  
   const handleToggleModel = (modelName: string) => {
     setSelectedModels(prev => {
       if (prev.includes(modelName)) {
@@ -117,6 +228,9 @@ const MLComparison: React.FC = () => {
       const results = await Promise.all(tasks);
       setEvaluations(results);
       
+      // Save results to database
+      await saveResultsToDatabase(results);
+      
       toast({
         title: "Model comparison complete",
         description: `Evaluated ${selectedModels.length} models across ${ratios.length} splitting ratios.`,
@@ -146,7 +260,10 @@ const MLComparison: React.FC = () => {
           </Button>
           <div>
             <h1 className="text-3xl font-bold">{app.title} - ML Model Comparison</h1>
-            <p className="text-muted-foreground">{reviews.length} reviews available</p>
+            <p className="text-muted-foreground">
+              {reviews.length} reviews available
+              {evaluations.length > 0 && ` • ${evaluations.length} evaluations stored`}
+            </p>
           </div>
         </div>
       </div>
@@ -167,6 +284,7 @@ const MLComparison: React.FC = () => {
           selectedRatio={selectedRatio}
           onSelectMetric={setSelectedMetric}
           onSelectRatio={setSelectedRatio}
+          isLoading={isPreviousResultsLoading}
         />
       </div>
       

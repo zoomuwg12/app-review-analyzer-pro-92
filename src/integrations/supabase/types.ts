@@ -9,7 +9,169 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      app_reviews: {
+        Row: {
+          app_id: string
+          content: string
+          created_at: string
+          id: string
+          processed_content: string | null
+          reply_content: string | null
+          reply_date: string | null
+          review_created_version: string | null
+          review_date: string
+          review_id: string
+          score: number
+          sentiment: string | null
+          thumbs_up_count: number
+          user_name: string
+        }
+        Insert: {
+          app_id: string
+          content: string
+          created_at?: string
+          id?: string
+          processed_content?: string | null
+          reply_content?: string | null
+          reply_date?: string | null
+          review_created_version?: string | null
+          review_date: string
+          review_id: string
+          score: number
+          sentiment?: string | null
+          thumbs_up_count?: number
+          user_name: string
+        }
+        Update: {
+          app_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          processed_content?: string | null
+          reply_content?: string | null
+          reply_date?: string | null
+          review_created_version?: string | null
+          review_date?: string
+          review_id?: string
+          score?: number
+          sentiment?: string | null
+          thumbs_up_count?: number
+          user_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "app_reviews_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "apps"
+            referencedColumns: ["app_id"]
+          },
+        ]
+      }
+      apps: {
+        Row: {
+          app_id: string
+          created_at: string
+          developer: string
+          free: boolean
+          icon: string
+          id: string
+          installs: string | null
+          price_text: string | null
+          score: number
+          summary: string | null
+          title: string
+          url: string | null
+        }
+        Insert: {
+          app_id: string
+          created_at?: string
+          developer: string
+          free?: boolean
+          icon: string
+          id?: string
+          installs?: string | null
+          price_text?: string | null
+          score: number
+          summary?: string | null
+          title: string
+          url?: string | null
+        }
+        Update: {
+          app_id?: string
+          created_at?: string
+          developer?: string
+          free?: boolean
+          icon?: string
+          id?: string
+          installs?: string | null
+          price_text?: string | null
+          score?: number
+          summary?: string | null
+          title?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
+      ml_comparisons: {
+        Row: {
+          accuracy: number
+          app_id: string
+          created_at: string
+          f1_score: number
+          false_negatives: number
+          false_positives: number
+          id: string
+          model_name: string
+          precision: number
+          prediction_time: number
+          recall: number
+          split_ratio: string
+          true_negatives: number
+          true_positives: number
+        }
+        Insert: {
+          accuracy: number
+          app_id: string
+          created_at?: string
+          f1_score: number
+          false_negatives: number
+          false_positives: number
+          id?: string
+          model_name: string
+          precision: number
+          prediction_time: number
+          recall: number
+          split_ratio: string
+          true_negatives: number
+          true_positives: number
+        }
+        Update: {
+          accuracy?: number
+          app_id?: string
+          created_at?: string
+          f1_score?: number
+          false_negatives?: number
+          false_positives?: number
+          id?: string
+          model_name?: string
+          precision?: number
+          prediction_time?: number
+          recall?: number
+          split_ratio?: string
+          true_negatives?: number
+          true_positives?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ml_comparisons_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "apps"
+            referencedColumns: ["app_id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

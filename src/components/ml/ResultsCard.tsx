@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BarChart2 } from 'lucide-react';
+import { BarChart2, Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ModelEvaluation } from '@/utils/ml';
 import ModelComparisonChart from './ModelComparisonChart';
@@ -13,6 +14,7 @@ interface ResultsCardProps {
   selectedRatio: string;
   onSelectMetric: (metric: 'accuracy' | 'precision' | 'recall' | 'f1Score') => void;
   onSelectRatio: (ratio: string) => void;
+  isLoading?: boolean;
 }
 
 const ResultsCard: React.FC<ResultsCardProps> = ({
@@ -20,7 +22,8 @@ const ResultsCard: React.FC<ResultsCardProps> = ({
   selectedMetric,
   selectedRatio,
   onSelectMetric,
-  onSelectRatio
+  onSelectRatio,
+  isLoading = false
 }) => {
   return (
     <Card className="lg:col-span-2">
@@ -63,7 +66,12 @@ const ResultsCard: React.FC<ResultsCardProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {evaluations.length > 0 ? (
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center h-[400px]">
+            <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+            <p className="text-muted-foreground">Loading saved results...</p>
+          </div>
+        ) : evaluations.length > 0 ? (
           <div className="space-y-6">
             <ModelComparisonChart 
               evaluations={evaluations} 
