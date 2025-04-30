@@ -159,19 +159,19 @@ const Dashboard: React.FC = () => {
     if (reviewsToSync.length === 0) return;
     
     try {
-      // Convert to database format
+      // Convert to database format and ensure dates are strings
       const dataToInsert = reviewsToSync.map(review => ({
         app_id: appId,
         review_id: review.id,
         user_name: review.userName,
         content: review.content,
         score: review.score,
-        review_date: review.at,
-        reply_content: review.replyContent,
-        reply_date: review.replyAt,
+        review_date: review.at.toISOString(),
+        reply_content: review.replyContent || null,
+        reply_date: review.replyAt ? review.replyAt.toISOString() : null,
         thumbs_up_count: review.thumbsUpCount,
-        review_created_version: review.reviewCreatedVersion,
-        processed_content: review.processedContent,
+        review_created_version: review.reviewCreatedVersion || null,
+        processed_content: review.processedContent || null,
         sentiment: review.score >= 3 ? 'positive' : 'negative' // Simple sentiment estimation
       }));
       
