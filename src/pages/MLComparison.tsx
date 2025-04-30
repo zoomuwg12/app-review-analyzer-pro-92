@@ -5,8 +5,14 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AppReview } from '@/utils/scraper';
-import { prepareData, calculateConfusionMatrix, ModelEvaluation } from '@/utils/mlAlgorithms';
-import { NaiveBayes, SVM, RandomForest } from '@/utils/mlAlgorithms';
+import { 
+  prepareData, 
+  calculateConfusionMatrix, 
+  ModelEvaluation, 
+  NaiveBayes, 
+  SVM, 
+  RandomForest 
+} from '@/utils/ml';
 import ConfigurationCard from '@/components/ml/ConfigurationCard';
 import ResultsCard from '@/components/ml/ResultsCard';
 import AlgorithmExplanationCard from '@/components/ml/AlgorithmExplanationCard';
