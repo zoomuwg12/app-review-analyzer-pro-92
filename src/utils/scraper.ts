@@ -82,8 +82,37 @@ const mockApps: { [key: string]: AppInfo } = {
   }
 };
 
+// Check if we're in a browser environment
+const isBrowser = typeof window !== 'undefined' && typeof window.document !== 'undefined';
+
 // Actual implementation using google-play-scraper
 export const fetchAppInfo = async (appId: string): Promise<AppInfo> => {
+  // In browser environment or if Node.js modules are not available, use mock data
+  if (isBrowser) {
+    console.log('Browser environment detected, using mock data for app info');
+    
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Return mock data if we have it
+    if (mockApps[appId]) {
+      return mockApps[appId];
+    }
+    
+    // Generate mock data for unknown app ID
+    return {
+      appId,
+      title: `App ${appId.split('.').pop()}`,
+      developer: 'Unknown Developer',
+      icon: 'https://via.placeholder.com/96',
+      score: 3 + Math.random() * 2, // Random score between 3-5
+      free: Math.random() > 0.3, // 70% chance of being free
+      installs: '1,000,000+',
+      summary: 'Note: This is mock data. The google-play-scraper library requires a Node.js environment to work correctly.'
+    };
+  }
+
+  // This code would only run in a Node.js environment
   try {
     console.log(`Fetching app info for ${appId} using google-play-scraper`);
     const app = await googlePlayScraper.app({ appId });
@@ -126,6 +155,23 @@ export const fetchAppInfo = async (appId: string): Promise<AppInfo> => {
 
 // Actual implementation using google-play-scraper for reviews
 export const fetchAppReviews = async (appId: string, count = 100): Promise<AppReview[]> => {
+  // In browser environment or if Node.js modules are not available, use mock data
+  if (isBrowser) {
+    console.log('Browser environment detected, using mock data for reviews');
+    
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Generate mock reviews
+    const reviews: AppReview[] = [];
+    for (let i = 0; i < count; i++) {
+      reviews.push(generateReview(appId, i));
+    }
+    
+    return reviews;
+  }
+
+  // This code would only run in a Node.js environment
   try {
     console.log(`Fetching ${count} reviews for ${appId} using google-play-scraper`);
     const result = await googlePlayScraper.reviews({
