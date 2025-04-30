@@ -26,5 +26,11 @@ export default defineConfig(({ mode }) => ({
     'process.browser': true,
     'process.version': '"0.0.0"',
     'global': 'window',
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+      // Mark google-play-scraper as external to prevent bundling
+      external: ['google-play-scraper']
+    }
   }
 }));

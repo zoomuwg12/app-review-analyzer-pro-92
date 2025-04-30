@@ -28,7 +28,7 @@ export interface AppReview {
   originalContent?: string;
 }
 
-// Mock app data for demo purposes - we'll keep this for fallback
+// Mock app data for demo purposes - we'll keep this for browser usage
 const mockApps: { [key: string]: AppInfo } = {
   'com.instagram.android': {
     appId: 'com.instagram.android',
@@ -82,127 +82,61 @@ const mockApps: { [key: string]: AppInfo } = {
   }
 };
 
-// Check if we're in a browser environment
-const isBrowser = typeof window !== 'undefined' && typeof window.document !== 'undefined';
-
-// Actual implementation using google-play-scraper
-export const fetchAppInfo = async (appId: string): Promise<AppInfo> => {
-  // In browser environment or if Node.js modules are not available, use mock data
-  if (isBrowser) {
-    console.log('Browser environment detected, using mock data for app info');
-    
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Return mock data if we have it
-    if (mockApps[appId]) {
-      return mockApps[appId];
-    }
-    
-    // Generate mock data for unknown app ID
-    return {
-      appId,
-      title: `App ${appId.split('.').pop()}`,
-      developer: 'Unknown Developer',
-      icon: 'https://via.placeholder.com/96',
-      score: 3 + Math.random() * 2, // Random score between 3-5
-      free: Math.random() > 0.3, // 70% chance of being free
-      installs: '1,000,000+',
-      summary: 'Note: This is mock data. The google-play-scraper library requires a Node.js environment to work correctly.'
-    };
-  }
-
-  // This code would only run in a Node.js environment
+// More sophisticated browser detection
+const isBrowser = () => {
   try {
-    console.log(`Fetching app info for ${appId} using google-play-scraper`);
-    const app = await googlePlayScraper.app({ appId });
-    console.log('App data fetched:', app);
-    
-    return {
-      appId: app.appId,
-      title: app.title,
-      developer: app.developer,
-      icon: app.icon,
-      score: app.score,
-      free: app.free,
-      priceText: app.priceText,
-      installs: app.installs,
-      summary: app.summary,
-      url: app.url
-    };
-  } catch (error) {
-    console.error('Error fetching app info:', error);
-    console.log('Falling back to mock data');
-    
-    // Fall back to mock data if there's an error
-    if (mockApps[appId]) {
-      return mockApps[appId];
-    }
-    
-    // Generate mock data for unknown app ID
-    return {
-      appId,
-      title: `App ${appId.split('.').pop()}`,
-      developer: 'Unknown Developer',
-      icon: 'https://via.placeholder.com/96',
-      score: 3 + Math.random() * 2, // Random score between 3-5
-      free: Math.random() > 0.3, // 70% chance of being free
-      installs: '1,000,000+',
-      summary: 'No description available for this app.'
-    };
+    // Check for browser environment
+    return (
+      typeof window !== 'undefined' && 
+      typeof window.document !== 'undefined' &&
+      typeof process === 'undefined' || // If process is defined but not a Node.js process
+      (typeof process !== 'undefined' && process.browser === true)
+    );
+  } catch (e) {
+    // If any error occurs while checking, assume browser environment for safety
+    return true;
   }
 };
 
-// Actual implementation using google-play-scraper for reviews
-export const fetchAppReviews = async (appId: string, count = 100): Promise<AppReview[]> => {
-  // In browser environment or if Node.js modules are not available, use mock data
-  if (isBrowser) {
-    console.log('Browser environment detected, using mock data for reviews');
-    
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Generate mock reviews
-    const reviews: AppReview[] = [];
-    for (let i = 0; i < count; i++) {
-      reviews.push(generateReview(appId, i));
-    }
-    
-    return reviews;
+// Mock implementation for browser environment
+const getMockAppInfo = async (appId: string): Promise<AppInfo> => {
+  console.log('Using mock data for app info in browser environment');
+  
+  // Simulate API call delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  // Return mock data if we have it
+  if (mockApps[appId]) {
+    return mockApps[appId];
   }
+  
+  // Generate mock data for unknown app ID
+  return {
+    appId,
+    title: `App ${appId.split('.').pop()}`,
+    developer: 'Unknown Developer',
+    icon: 'https://via.placeholder.com/96',
+    score: 3 + Math.random() * 2, // Random score between 3-5
+    free: Math.random() > 0.3, // 70% chance of being free
+    installs: '1,000,000+',
+    summary: 'This is mock data for demonstration purposes. In production, real data would be fetched from the Google Play Store API.'
+  };
+};
 
-  // This code would only run in a Node.js environment
-  try {
-    console.log(`Fetching ${count} reviews for ${appId} using google-play-scraper`);
-    const result = await googlePlayScraper.reviews({
-      appId,
-      sort: googlePlayScraper.sort.NEWEST,
-      num: count
-    });
-    console.log(`Fetched ${result.data.length} reviews`);
-    
-    return result.data.map(review => ({
-      id: review.id || `review-${Math.random().toString(36).substring(2, 15)}`,
-      userName: review.userName || 'Anonymous',
-      content: review.text || '',
-      score: review.score || 0,
-      at: new Date(review.date || Date.now()),
-      replyContent: review.replyText,
-      replyAt: review.replyDate ? new Date(review.replyDate) : undefined,
-      thumbsUpCount: review.thumbsUp || 0,
-      reviewCreatedVersion: review.version || undefined
-    }));
-  } catch (error) {
-    console.error('Error fetching reviews:', error);
-    console.log('Falling back to generated reviews');
-    
-    // Fall back to generated reviews if there's an error
-    const reviews: AppReview[] = [];
-    for (let i = 0; i < count; i++) {
-      reviews.push(generateReview(appId, i));
-    }
-    return reviews;
+// Mock implementation for browser environment
+const getMockAppReviews = async (appId: string, count = 100): Promise<AppReview[]> => {
+  console.log('Using mock data for reviews in browser environment');
+  
+  // Simulate API call delay
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  
+  // Generate mock reviews
+  const reviews: AppReview[] = [];
+  for (let i = 0; i < count; i++) {
+    reviews.push(generateReview(appId, i));
   }
+  
+  return reviews;
 };
 
 // Generate a random review - keep for fallback
@@ -257,4 +191,75 @@ const generateReview = (appId: string, index: number): AppReview => {
     thumbsUpCount: Math.floor(Math.random() * 100),
     reviewCreatedVersion: `${Math.floor(Math.random() * 10)}.${Math.floor(Math.random() * 10)}.${Math.floor(Math.random() * 10)}`
   };
+};
+
+// Main API function for fetching app info - safely decides between real and mock data
+export const fetchAppInfo = async (appId: string): Promise<AppInfo> => {
+  // In browser environment, always use mock data
+  if (isBrowser()) {
+    return getMockAppInfo(appId);
+  }
+
+  // This code would only run in a Node.js environment
+  try {
+    console.log(`Fetching app info for ${appId} using google-play-scraper`);
+    const app = await googlePlayScraper.app({ appId });
+    console.log('App data fetched:', app);
+    
+    return {
+      appId: app.appId,
+      title: app.title,
+      developer: app.developer,
+      icon: app.icon,
+      score: app.score,
+      free: app.free,
+      priceText: app.priceText,
+      installs: app.installs,
+      summary: app.summary,
+      url: app.url
+    };
+  } catch (error) {
+    console.error('Error fetching app info:', error);
+    console.log('Falling back to mock data');
+    
+    // Fall back to mock data if there's an error
+    return getMockAppInfo(appId);
+  }
+};
+
+// Main API function for fetching app reviews - safely decides between real and mock data
+export const fetchAppReviews = async (appId: string, count = 100): Promise<AppReview[]> => {
+  // In browser environment, always use mock data
+  if (isBrowser()) {
+    return getMockAppReviews(appId, count);
+  }
+
+  // This code would only run in a Node.js environment
+  try {
+    console.log(`Fetching ${count} reviews for ${appId} using google-play-scraper`);
+    const result = await googlePlayScraper.reviews({
+      appId,
+      sort: googlePlayScraper.sort.NEWEST,
+      num: count
+    });
+    console.log(`Fetched ${result.data.length} reviews`);
+    
+    return result.data.map(review => ({
+      id: review.id || `review-${Math.random().toString(36).substring(2, 15)}`,
+      userName: review.userName || 'Anonymous',
+      content: review.text || '',
+      score: review.score || 0,
+      at: new Date(review.date || Date.now()),
+      replyContent: review.replyText,
+      replyAt: review.replyDate ? new Date(review.replyDate) : undefined,
+      thumbsUpCount: review.thumbsUp || 0,
+      reviewCreatedVersion: review.version || undefined
+    }));
+  } catch (error) {
+    console.error('Error fetching reviews:', error);
+    console.log('Falling back to generated reviews');
+    
+    // Fall back to generated reviews if there's an error
+    return getMockAppReviews(appId, count);
+  }
 };
