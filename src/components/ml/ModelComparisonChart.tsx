@@ -1,7 +1,6 @@
-
 import React, { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { ModelEvaluation } from '@/utils/mlAlgorithms';
+import { ModelEvaluation } from '@/utils/ml';
 
 interface ModelComparisonChartProps {
   evaluations: ModelEvaluation[];

@@ -6,3 +6,4 @@ export * from './evaluation';
 export * from './algorithms/naiveBayes';
 export * from './algorithms/svm';
 export * from './algorithms/randomForest';
+

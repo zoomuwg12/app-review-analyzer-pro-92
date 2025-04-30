@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ConfusionMatrix } from '@/utils/mlAlgorithms';
+import { ConfusionMatrix } from '@/utils/ml';
 
 interface ConfusionMatrixCardProps {
   modelName: string;

@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BarChart2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ModelEvaluation } from '@/utils/mlAlgorithms';
+import { ModelEvaluation } from '@/utils/ml';
 import ModelComparisonChart from './ModelComparisonChart';
 import ConfusionMatrixCard from './ConfusionMatrixCard';
 
