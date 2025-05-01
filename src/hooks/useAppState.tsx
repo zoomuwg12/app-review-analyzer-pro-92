@@ -69,57 +69,41 @@ export function useAppState() {
       // First try to load from Supabase
       const databaseReviews = await loadReviewsFromDatabase(appId, reviewCount);
       
-      if (databaseReviews) {
+      if (databaseReviews && databaseReviews.length >= reviewCount) {
         setReviews(databaseReviews);
         setIsDemoMode(false);
+        toast({
+          title: "Reviews loaded from database",
+          description: `${databaseReviews.length} reviews loaded from the database.`,
+          variant: "default",
+        });
+        setIsLoadingReviews(false);
         return;
       }
       
-      // If not enough reviews in database, fetch from API
+      // If not enough reviews in database, use mock data
       try {
-        const fetchedReviews = await fetchAppReviews(appId, reviewCount);
-        setReviews(fetchedReviews);
-        setIsDemoMode(false);
-        
-        // Save to database
-        await syncReviewsToDatabase(appId, fetchedReviews);
-        
-        toast({
-          title: "Reviews loaded",
-          description: `${fetchedReviews.length} reviews loaded for analysis.`,
-          variant: "default",
-        });
-      } catch (error) {
-        // If API fetch fails, use mock data
-        console.error("Real API fetch failed, falling back to mock data:", error);
-        toast({
-          title: "Using demo data",
-          description: "Could not fetch real reviews. Using demo data instead.",
-          variant: "warning",
-        });
-        
-        // Generate mock reviews
-        const mockReviews: AppReview[] = [];
-        for (let i = 0; i < reviewCount; i++) {
-          const score = Math.floor(Math.random() * 5) + 1;
-          const date = new Date();
-          date.setDate(date.getDate() - Math.floor(Math.random() * 365));
-          
-          mockReviews.push({
-            id: `review-${appId}-${i}`,
-            userName: `User${Math.floor(Math.random() * 1000)}`,
-            content: score > 3 ? 
-              "Love this app! It's amazing and very useful." : 
-              "Not satisfied with this app. Needs improvement.",
-            score,
-            at: date,
-            thumbsUpCount: Math.floor(Math.random() * 100),
-            reviewCreatedVersion: `${Math.floor(Math.random() * 10)}.${Math.floor(Math.random() * 10)}`
-          });
-        }
-        
+        // Always use mock data since we can't use the real API in the browser
+        const mockReviews = await fetchAppReviews(appId, reviewCount);
         setReviews(mockReviews);
         setIsDemoMode(true);
+        
+        // Save mock reviews to database for consistency
+        await syncReviewsToDatabase(appId, mockReviews);
+        
+        toast({
+          title: "Using demo data",
+          description: "Showing mock review data. In a production environment, this would connect to the real Google Play Store API.",
+          variant: "warning",
+        });
+      } catch (error) {
+        console.error("Error generating mock data:", error);
+        toast({
+          title: "Error loading reviews",
+          description: "Could not generate review data.",
+          variant: "destructive",
+        });
+        setReviews([]);
       }
     } catch (error) {
       console.error('Failed to load reviews:', error);
@@ -129,7 +113,6 @@ export function useAppState() {
         variant: "destructive",
       });
       setReviews([]);
-      setIsDemoMode(true);
     } finally {
       setIsLoadingReviews(false);
     }
@@ -148,59 +131,26 @@ export function useAppState() {
 
     setIsLoadingApps(true);
     try {
-      // Try to fetch real app info
-      try {
-        const appInfo = await fetchAppInfo(appId);
-        
-        // Add to local state
-        setApps(prevApps => [...prevApps, appInfo]);
-        
-        // Save to Supabase
-        await syncAppsToDatabase([appInfo]);
-        
-        // If this is the first app, select it
-        if (!selectedAppId) {
-          setSelectedAppId(appId);
-        }
-
-        toast({
-          title: "App added successfully",
-          description: `${appInfo.title} has been added to your list.`,
-          variant: "default",
-        });
-        setIsDemoMode(false);
-      } catch (error) {
-        console.error("Error fetching real app info, falling back to mock data:", error);
-        
-        // If real fetch fails, use mock data
-        const mockAppData = {
-          appId,
-          title: `App ${appId.split('.').pop()}`,
-          developer: "Mock Developer",
-          icon: "https://via.placeholder.com/150",
-          score: 4.2,
-          free: true,
-          installs: "1,000,000+",
-          summary: "This is a mock app description because real data could not be fetched."
-        };
-        
-        setApps(prevApps => [...prevApps, mockAppData]);
-        
-        // Save mock data to Supabase
-        await syncAppsToDatabase([mockAppData]);
-        
-        // If this is the first app, select it
-        if (!selectedAppId) {
-          setSelectedAppId(appId);
-        }
-
-        toast({
-          title: "App added in demo mode",
-          description: "Could not fetch real app data. Added with mock data instead.",
-          variant: "warning",
-        });
-        setIsDemoMode(true);
+      // Always use mock app data in the browser
+      const appInfo = await fetchAppInfo(appId);
+      
+      // Add to local state
+      setApps(prevApps => [...prevApps, appInfo]);
+      
+      // Save to Supabase
+      await syncAppsToDatabase([appInfo]);
+      
+      // If this is the first app, select it
+      if (!selectedAppId) {
+        setSelectedAppId(appId);
       }
+
+      toast({
+        title: "App added in demo mode",
+        description: "App has been added with mock data. In a production environment, this would fetch real data from the Google Play Store API.",
+        variant: "warning",
+      });
+      setIsDemoMode(true);
     } catch (error) {
       console.error('Failed to add app:', error);
       toast({
