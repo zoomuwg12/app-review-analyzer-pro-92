@@ -161,7 +161,11 @@ export const fetchAppInfo = async (appId: string): Promise<AppInfo> => {
 // Replace the mock function to fetch app reviews
 export const fetchAppReviews = async (appId: string, count = 100): Promise<AppReview[]> => {
   try {
-    const reviews = await gplay.reviews({ appId, sort: gplay.sort.NEWEST, num: count });
+    const reviews = await gplay.reviews({
+      appId,
+      sort: gplay.sort.NEWEST,
+      num: count
+    });
     return reviews.data.map((review, index) => ({
       id: review.id || `review-${appId}-${index}`,
       userName: review.userName || 'Anonymous',

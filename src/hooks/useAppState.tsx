@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppInfo, AppReview, fetchAppInfo, fetchAppReviews } from '@/utils/scraper';
@@ -54,6 +53,12 @@ export function useAppState() {
   useEffect(() => {
     localStorage.setItem('appReviewAnalyzer_apps', JSON.stringify(apps));
   }, [apps]);
+
+  useEffect(() => {
+    console.log("Apps state:", apps);
+    console.log("Selected App ID:", selectedAppId);
+    console.log("Reviews state:", reviews);
+  }, [apps, selectedAppId, reviews]);
 
   const loadReviews = async (appId: string) => {
     setIsLoadingReviews(true);
