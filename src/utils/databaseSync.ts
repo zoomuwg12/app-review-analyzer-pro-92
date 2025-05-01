@@ -1,9 +1,9 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { AppInfo, AppReview } from "@/utils/scraper";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/hooks/use-toast";
 
-export const syncAppsToDatabase = async (appsToSync: AppInfo[], toast: ReturnType<typeof useToast>) => {
+export const syncAppsToDatabase = async (appsToSync: AppInfo[]) => {
   if (appsToSync.length === 0) return;
   
   try {
@@ -76,7 +76,7 @@ export const syncReviewsToDatabase = async (appId: string, reviewsToSync: AppRev
   }
 };
 
-export const loadAppsFromDatabase = async (toast: ReturnType<typeof useToast>) => {
+export const loadAppsFromDatabase = async () => {
   try {
     // First try to load from Supabase
     const { data, error } = await supabase
@@ -144,7 +144,7 @@ export const loadAppsFromDatabase = async (toast: ReturnType<typeof useToast>) =
   }
 };
 
-export const loadReviewsFromDatabase = async (appId: string, reviewCount: number, toast: ReturnType<typeof useToast>) => {
+export const loadReviewsFromDatabase = async (appId: string, reviewCount: number) => {
   try {
     // First try to load from Supabase
     const { data, error } = await supabase

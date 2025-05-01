@@ -21,7 +21,7 @@ export function useAppState() {
       setIsLoadingApps(true);
       
       try {
-        const result = await loadAppsFromDatabase(toast);
+        const result = await loadAppsFromDatabase();
         setApps(result.apps);
         
         // If there are apps, select the first one
@@ -31,7 +31,7 @@ export function useAppState() {
         
         // If apps were loaded from localStorage, sync them to database
         if (!result.fromDatabase && result.apps.length > 0) {
-          await syncAppsToDatabase(result.apps, { toast });
+          await syncAppsToDatabase(result.apps);
         }
       } finally {
         setIsLoadingApps(false);
@@ -59,7 +59,7 @@ export function useAppState() {
     setIsLoadingReviews(true);
     try {
       // First try to load from Supabase
-      const databaseReviews = await loadReviewsFromDatabase(appId, reviewCount, toast);
+      const databaseReviews = await loadReviewsFromDatabase(appId, reviewCount);
       
       if (databaseReviews) {
         setReviews(databaseReviews);
@@ -109,7 +109,7 @@ export function useAppState() {
       setApps(prevApps => [...prevApps, appInfo]);
       
       // Save to Supabase
-      await syncAppsToDatabase([appInfo], { toast });
+      await syncAppsToDatabase([appInfo]);
       
       // If this is the first app, select it
       if (!selectedAppId) {
