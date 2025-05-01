@@ -1,3 +1,4 @@
+import * as gplay from 'google-play-scraper';
 
 export interface AppInfo {
   appId: string;
@@ -22,12 +23,11 @@ export interface AppReview {
   replyAt?: Date;
   thumbsUpCount: number;
   reviewCreatedVersion?: string;
-  // For preprocessing
   processedContent?: string;
   originalContent?: string;
 }
 
-// Mock app data for demo purposes
+// Mock apps for development/fallback
 const mockApps: { [key: string]: AppInfo } = {
   'com.instagram.android': {
     appId: 'com.instagram.android',
@@ -81,8 +81,107 @@ const mockApps: { [key: string]: AppInfo } = {
   }
 };
 
-// Generate a random review
-const generateReview = (appId: string, index: number): AppReview => {
+// Transform gplay app data to our AppInfo format
+const transformAppData = (appData: any): AppInfo => {
+  return {
+    appId: appData.appId,
+    title: appData.title,
+    developer: appData.developer,
+    icon: appData.icon,
+    score: appData.score,
+    free: appData.free,
+    priceText: appData.price,
+    installs: appData.installs,
+    summary: appData.summary,
+    url: appData.url
+  };
+};
+
+// Transform gplay review data to our AppReview format
+const transformReviewData = (review: any): AppReview => {
+  return {
+    id: review.id,
+    userName: review.userName,
+    content: review.text,
+    score: review.score,
+    at: new Date(review.date),
+    replyContent: review.replyText || undefined,
+    replyAt: review.replyDate ? new Date(review.replyDate) : undefined,
+    thumbsUpCount: review.thumbsUp || 0,
+    reviewCreatedVersion: review.version || undefined
+  };
+};
+
+// Function to fetch real app info
+export const fetchAppInfo = async (appId: string): Promise<AppInfo> => {
+  try {
+    console.log(`Fetching app info for ${appId}...`);
+    const appData = await gplay.app({ appId });
+    console.log("App data fetched:", appData.title);
+    return transformAppData(appData);
+  } catch (error) {
+    console.error(`Failed to fetch app info for ${appId}:`, error);
+    
+    // Fallback to mock data if available
+    if (mockApps[appId]) {
+      console.log(`Using mock data for ${appId}`);
+      return mockApps[appId];
+    }
+    
+    // If no mock data, create generic placeholder
+    return {
+      appId,
+      title: `App ${appId.split('.').pop()}`,
+      developer: 'Unknown Developer',
+      icon: 'https://via.placeholder.com/96',
+      score: 0,
+      free: true,
+      installs: 'Unknown',
+      summary: 'No description available for this app.'
+    };
+  }
+};
+
+// Function to fetch real app reviews
+export const fetchAppReviews = async (appId: string, count = 100): Promise<AppReview[]> => {
+  try {
+    console.log(`Fetching ${count} reviews for ${appId}...`);
+    // Google Play Scraper allows pagination, so we'll batch the requests
+    const batchSize = 100; // Max supported by the API
+    const batches = Math.ceil(count / batchSize);
+    let reviews: AppReview[] = [];
+
+    for (let i = 0; i < batches; i++) {
+      if (reviews.length >= count) break;
+      
+      const result = await gplay.reviews({
+        appId,
+        sort: gplay.sort.NEWEST,
+        num: Math.min(batchSize, count - reviews.length),
+        paginate: true,
+        nextPaginationToken: i > 0 ? reviews[reviews.length - 1].id : undefined
+      });
+      
+      const transformedReviews = result.data.map(transformReviewData);
+      reviews = [...reviews, ...transformedReviews];
+      
+      // If we didn't get as many reviews as requested in this batch, stop
+      if (result.data.length < batchSize) break;
+    }
+
+    console.log(`Fetched ${reviews.length} reviews for ${appId}`);
+    return reviews.slice(0, count);
+  } catch (error) {
+    console.error(`Failed to fetch reviews for ${appId}:`, error);
+    
+    // Fallback to generating mock reviews
+    console.log(`Using generated mock reviews for ${appId}`);
+    return generateMockReviews(appId, count);
+  }
+};
+
+// Mock function to generate reviews (used as fallback)
+const generateMockReviews = (appId: string, count = 100): AppReview[] => {
   const positiveReviews = [
     "Great app, I love using it every day!",
     "This is my favorite app, very intuitive and helpful.",
@@ -107,66 +206,31 @@ const generateReview = (appId: string, index: number): AppReview => {
     "Uninstalled after a day, couldn't stand the user interface."
   ];
 
-  // Generate a random score between 1-5
-  const score = Math.floor(Math.random() * 5) + 1;
-  
-  // Choose a review based on the score
-  let content;
-  if (score >= 4) {
-    content = positiveReviews[Math.floor(Math.random() * positiveReviews.length)];
-  } else if (score >= 3) {
-    content = neutralReviews[Math.floor(Math.random() * neutralReviews.length)];
-  } else {
-    content = negativeReviews[Math.floor(Math.random() * negativeReviews.length)];
-  }
-
-  // Generate a random date within the last year
-  const date = new Date();
-  date.setDate(date.getDate() - Math.floor(Math.random() * 365));
-  
-  return {
-    id: `review-${appId}-${index}`,
-    userName: `User${Math.floor(Math.random() * 1000)}`,
-    content,
-    score,
-    at: date,
-    thumbsUpCount: Math.floor(Math.random() * 100),
-    reviewCreatedVersion: `${Math.floor(Math.random() * 10)}.${Math.floor(Math.random() * 10)}.${Math.floor(Math.random() * 10)}`
-  };
-};
-
-// Mock function to fetch app info
-export const fetchAppInfo = async (appId: string): Promise<AppInfo> => {
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  // Return mock data if we have it
-  if (mockApps[appId]) {
-    return mockApps[appId];
-  }
-  
-  // Generate mock data for unknown app ID
-  return {
-    appId,
-    title: `App ${appId.split('.').pop()}`,
-    developer: 'Unknown Developer',
-    icon: 'https://via.placeholder.com/96',
-    score: 3 + Math.random() * 2, // Random score between 3-5
-    free: Math.random() > 0.3, // 70% chance of being free
-    installs: '1,000,000+',
-    summary: 'No description available for this app.'
-  };
-};
-
-// Mock function to fetch app reviews
-export const fetchAppReviews = async (appId: string, count = 100): Promise<AppReview[]> => {
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  // Generate mock reviews
   const reviews: AppReview[] = [];
   for (let i = 0; i < count; i++) {
-    reviews.push(generateReview(appId, i));
+    const score = Math.floor(Math.random() * 5) + 1;
+    
+    let content;
+    if (score >= 4) {
+      content = positiveReviews[Math.floor(Math.random() * positiveReviews.length)];
+    } else if (score >= 3) {
+      content = neutralReviews[Math.floor(Math.random() * neutralReviews.length)];
+    } else {
+      content = negativeReviews[Math.floor(Math.random() * negativeReviews.length)];
+    }
+
+    const date = new Date();
+    date.setDate(date.getDate() - Math.floor(Math.random() * 365));
+    
+    reviews.push({
+      id: `review-${appId}-${i}`,
+      userName: `User${Math.floor(Math.random() * 1000)}`,
+      content,
+      score,
+      at: date,
+      thumbsUpCount: Math.floor(Math.random() * 100),
+      reviewCreatedVersion: `${Math.floor(Math.random() * 10)}.${Math.floor(Math.random() * 10)}.${Math.floor(Math.random() * 10)}`
+    });
   }
   
   return reviews;

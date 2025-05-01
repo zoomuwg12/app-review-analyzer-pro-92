@@ -13,7 +13,8 @@ const Dashboard: React.FC = () => {
     reviews, 
     isLoadingApps, 
     isLoadingReviews, 
-    reviewCount, 
+    reviewCount,
+    isDemoMode,
     selectedApp,
     setSelectedAppId,
     setReviewCount,
@@ -24,7 +25,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="container mx-auto py-8 px-4 space-y-8">
-      <DemoAlert />
+      <DemoAlert isDemoMode={isDemoMode} />
 
       <AppSelector 
         apps={apps}
