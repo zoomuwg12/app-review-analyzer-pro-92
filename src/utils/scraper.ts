@@ -1,3 +1,4 @@
+import * as gplay from 'google-play-scraper';
 
 export interface AppInfo {
   appId: string;
@@ -135,39 +136,45 @@ const generateReview = (appId: string, index: number): AppReview => {
   };
 };
 
-// Mock function to fetch app info
+// Replace the mock function to fetch app info
 export const fetchAppInfo = async (appId: string): Promise<AppInfo> => {
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  // Return mock data if we have it
-  if (mockApps[appId]) {
-    return mockApps[appId];
+  try {
+    const appDetails = await gplay.app({ appId });
+    return {
+      appId: appDetails.appId,
+      title: appDetails.title,
+      developer: appDetails.developer,
+      icon: appDetails.icon,
+      score: appDetails.score,
+      free: appDetails.free,
+      priceText: appDetails.priceText,
+      installs: appDetails.installs,
+      summary: appDetails.summary,
+      url: appDetails.url,
+    };
+  } catch (error) {
+    console.error(`Error fetching app info for ${appId}:`, error);
+    throw error;
   }
-  
-  // Generate mock data for unknown app ID
-  return {
-    appId,
-    title: `App ${appId.split('.').pop()}`,
-    developer: 'Unknown Developer',
-    icon: 'https://via.placeholder.com/96',
-    score: 3 + Math.random() * 2, // Random score between 3-5
-    free: Math.random() > 0.3, // 70% chance of being free
-    installs: '1,000,000+',
-    summary: 'No description available for this app.'
-  };
 };
 
-// Mock function to fetch app reviews
+// Replace the mock function to fetch app reviews
 export const fetchAppReviews = async (appId: string, count = 100): Promise<AppReview[]> => {
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  // Generate mock reviews
-  const reviews: AppReview[] = [];
-  for (let i = 0; i < count; i++) {
-    reviews.push(generateReview(appId, i));
+  try {
+    const reviews = await gplay.reviews({ appId, sort: gplay.sort.NEWEST, num: count });
+    return reviews.data.map((review, index) => ({
+      id: review.id || `review-${appId}-${index}`,
+      userName: review.userName || 'Anonymous',
+      content: review.text,
+      score: review.score,
+      at: new Date(review.date), // Convert to Date object
+      replyContent: review.replyText,
+      replyAt: review.replyDate ? new Date(review.replyDate) : undefined, // Convert if present
+      thumbsUpCount: review.thumbsUp,
+      reviewCreatedVersion: review.version,
+    }));
+  } catch (error) {
+    console.error(`Error fetching reviews for ${appId}:`, error);
+    throw error;
   }
-  
-  return reviews;
 };
