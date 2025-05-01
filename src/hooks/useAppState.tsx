@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppInfo, AppReview, fetchAppInfo, fetchAppReviews } from '@/utils/scraper';
@@ -13,6 +14,7 @@ export function useAppState() {
   const [isLoadingReviews, setIsLoadingReviews] = useState(false);
   const [reviewCount, setReviewCount] = useState<number>(100);
   const [isSyncingWithDatabase, setSyncingWithDatabase] = useState(false);
+  const [isDemoMode, setIsDemoMode] = useState<boolean>(true);
 
   // Load apps from Supabase on mount
   useEffect(() => {
@@ -58,7 +60,8 @@ export function useAppState() {
     console.log("Apps state:", apps);
     console.log("Selected App ID:", selectedAppId);
     console.log("Reviews state:", reviews);
-  }, [apps, selectedAppId, reviews]);
+    console.log("Demo mode:", isDemoMode);
+  }, [apps, selectedAppId, reviews, isDemoMode]);
 
   const loadReviews = async (appId: string) => {
     setIsLoadingReviews(true);
@@ -68,10 +71,15 @@ export function useAppState() {
       
       if (databaseReviews) {
         setReviews(databaseReviews);
-      } else {
-        // If not enough reviews in database, fetch from API
+        setIsDemoMode(false);
+        return;
+      }
+      
+      // If not enough reviews in database, fetch from API
+      try {
         const fetchedReviews = await fetchAppReviews(appId, reviewCount);
         setReviews(fetchedReviews);
+        setIsDemoMode(false);
         
         // Save to database
         await syncReviewsToDatabase(appId, fetchedReviews);
@@ -81,6 +89,37 @@ export function useAppState() {
           description: `${fetchedReviews.length} reviews loaded for analysis.`,
           variant: "default",
         });
+      } catch (error) {
+        // If API fetch fails, use mock data
+        console.error("Real API fetch failed, falling back to mock data:", error);
+        toast({
+          title: "Using demo data",
+          description: "Could not fetch real reviews. Using demo data instead.",
+          variant: "warning",
+        });
+        
+        // Generate mock reviews
+        const mockReviews: AppReview[] = [];
+        for (let i = 0; i < reviewCount; i++) {
+          const score = Math.floor(Math.random() * 5) + 1;
+          const date = new Date();
+          date.setDate(date.getDate() - Math.floor(Math.random() * 365));
+          
+          mockReviews.push({
+            id: `review-${appId}-${i}`,
+            userName: `User${Math.floor(Math.random() * 1000)}`,
+            content: score > 3 ? 
+              "Love this app! It's amazing and very useful." : 
+              "Not satisfied with this app. Needs improvement.",
+            score,
+            at: date,
+            thumbsUpCount: Math.floor(Math.random() * 100),
+            reviewCreatedVersion: `${Math.floor(Math.random() * 10)}.${Math.floor(Math.random() * 10)}`
+          });
+        }
+        
+        setReviews(mockReviews);
+        setIsDemoMode(true);
       }
     } catch (error) {
       console.error('Failed to load reviews:', error);
@@ -90,6 +129,7 @@ export function useAppState() {
         variant: "destructive",
       });
       setReviews([]);
+      setIsDemoMode(true);
     } finally {
       setIsLoadingReviews(false);
     }
@@ -108,29 +148,64 @@ export function useAppState() {
 
     setIsLoadingApps(true);
     try {
-      const appInfo = await fetchAppInfo(appId);
-      
-      // Add to local state
-      setApps(prevApps => [...prevApps, appInfo]);
-      
-      // Save to Supabase
-      await syncAppsToDatabase([appInfo]);
-      
-      // If this is the first app, select it
-      if (!selectedAppId) {
-        setSelectedAppId(appId);
-      }
+      // Try to fetch real app info
+      try {
+        const appInfo = await fetchAppInfo(appId);
+        
+        // Add to local state
+        setApps(prevApps => [...prevApps, appInfo]);
+        
+        // Save to Supabase
+        await syncAppsToDatabase([appInfo]);
+        
+        // If this is the first app, select it
+        if (!selectedAppId) {
+          setSelectedAppId(appId);
+        }
 
-      toast({
-        title: "App added successfully",
-        description: `${appInfo.title} has been added to your list.`,
-        variant: "default",
-      });
+        toast({
+          title: "App added successfully",
+          description: `${appInfo.title} has been added to your list.`,
+          variant: "default",
+        });
+        setIsDemoMode(false);
+      } catch (error) {
+        console.error("Error fetching real app info, falling back to mock data:", error);
+        
+        // If real fetch fails, use mock data
+        const mockAppData = {
+          appId,
+          title: `App ${appId.split('.').pop()}`,
+          developer: "Mock Developer",
+          icon: "https://via.placeholder.com/150",
+          score: 4.2,
+          free: true,
+          installs: "1,000,000+",
+          summary: "This is a mock app description because real data could not be fetched."
+        };
+        
+        setApps(prevApps => [...prevApps, mockAppData]);
+        
+        // Save mock data to Supabase
+        await syncAppsToDatabase([mockAppData]);
+        
+        // If this is the first app, select it
+        if (!selectedAppId) {
+          setSelectedAppId(appId);
+        }
+
+        toast({
+          title: "App added in demo mode",
+          description: "Could not fetch real app data. Added with mock data instead.",
+          variant: "warning",
+        });
+        setIsDemoMode(true);
+      }
     } catch (error) {
       console.error('Failed to add app:', error);
       toast({
         title: "Failed to add app",
-        description: `Could not fetch app info. Please check the app ID and try again.`,
+        description: `Could not add app. Please check the app ID and try again.`,
         variant: "destructive",
       });
     } finally {
@@ -175,6 +250,7 @@ export function useAppState() {
     isLoadingReviews,
     reviewCount,
     isSyncingWithDatabase,
+    isDemoMode,
     selectedApp: apps.find(app => app.appId === selectedAppId),
     setSelectedAppId,
     setReviewCount,
