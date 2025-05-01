@@ -14,7 +14,6 @@ export function useAppState() {
   const [isLoadingReviews, setIsLoadingReviews] = useState(false);
   const [reviewCount, setReviewCount] = useState<number>(100);
   const [isSyncingWithDatabase, setSyncingWithDatabase] = useState(false);
-  const [isDemoMode, setIsDemoMode] = useState<boolean>(false);
 
   // Load apps from Supabase on mount
   useEffect(() => {
@@ -62,43 +61,24 @@ export function useAppState() {
       // First try to load from Supabase
       const databaseReviews = await loadReviewsFromDatabase(appId, reviewCount);
       
-      if (databaseReviews && databaseReviews.length >= reviewCount) {
+      if (databaseReviews) {
         setReviews(databaseReviews);
-        setIsDemoMode(false);
       } else {
         // If not enough reviews in database, fetch from API
-        try {
-          const fetchedReviews = await fetchAppReviews(appId, reviewCount);
-          setReviews(fetchedReviews);
-          setIsDemoMode(false);
-          
-          // Save to database
-          await syncReviewsToDatabase(appId, fetchedReviews);
-          
-          toast({
-            title: "Reviews loaded",
-            description: `${fetchedReviews.length} reviews loaded for analysis.`,
-            variant: "default",
-          });
-        } catch (error) {
-          console.error('Failed to fetch live reviews, using mock data:', error);
-          setIsDemoMode(true);
-          
-          // If API fetch fails, use mock data
-          const mockReviews = await fetchAppReviews(appId, reviewCount);
-          setReviews(mockReviews);
-          
-          toast({
-            title: "Using demo data",
-            description: "Could not connect to Google Play Store API. Using demo data instead.",
-            variant: "warning",
-          });
-        }
+        const fetchedReviews = await fetchAppReviews(appId, reviewCount);
+        setReviews(fetchedReviews);
+        
+        // Save to database
+        await syncReviewsToDatabase(appId, fetchedReviews);
+        
+        toast({
+          title: "Reviews loaded",
+          description: `${fetchedReviews.length} reviews loaded for analysis.`,
+          variant: "default",
+        });
       }
     } catch (error) {
       console.error('Failed to load reviews:', error);
-      setIsDemoMode(true);
-      
       toast({
         title: "Failed to load reviews",
         description: "Could not fetch reviews. Please try again.",
@@ -123,33 +103,7 @@ export function useAppState() {
 
     setIsLoadingApps(true);
     try {
-      let appInfo;
-      try {
-        // Try to fetch real app info
-        appInfo = await fetchAppInfo(appId);
-        setIsDemoMode(false);
-      } catch (error) {
-        console.error('Failed to fetch real app info, using mock data:', error);
-        setIsDemoMode(true);
-        
-        // Fallback to mock data
-        appInfo = {
-          appId,
-          title: `App ${appId.split('.').pop()}`,
-          developer: 'Unknown Developer',
-          icon: 'https://via.placeholder.com/96',
-          score: 3 + Math.random() * 2,
-          free: Math.random() > 0.3,
-          installs: '1,000,000+',
-          summary: 'No description available for this app.'
-        };
-        
-        toast({
-          title: "Using mock data",
-          description: "Could not connect to Google Play Store API. Using demo data instead.",
-          variant: "warning",
-        });
-      }
+      const appInfo = await fetchAppInfo(appId);
       
       // Add to local state
       setApps(prevApps => [...prevApps, appInfo]);
@@ -216,7 +170,6 @@ export function useAppState() {
     isLoadingReviews,
     reviewCount,
     isSyncingWithDatabase,
-    isDemoMode,
     selectedApp: apps.find(app => app.appId === selectedAppId),
     setSelectedAppId,
     setReviewCount,
